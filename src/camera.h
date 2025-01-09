@@ -58,7 +58,8 @@ SoftwareSerial mySerial(RX_PIN, TX_PIN);
 
 #define T_TUNER '>'
 bool cameraSetupSuccessful = false;
-int xCoord, yCoord, width, widthCounter;  // the x y returned by the sensor
+int xCoord, yCoord, width, widthCounter, xSpeed, ySpeed;  // the x y returned by the sensor
+long camFrameTimer;
 float xError, xIntegral, xDerivative, xLastError = 0;
 float yError, yIntegral, yDerivative, yLastError = 0;  // the scaled distance from the center of the frame
 int outputX = 0, outputY = 0;                          // the current x y of the camera's direction in the world coordinate
@@ -326,6 +327,7 @@ int coords[3];
 
 void taskReadCamera(void *par) {
   while (cameraTaskActiveQ) {
+    camFPS();
 #ifdef MU_CAMERA
     if (MuQ)
       read_MuCamera();
@@ -356,27 +358,38 @@ void read_camera() {
       0);                  // core
     cameraTaskActiveQ = 1;
     PTLF("Camera task activated.");
+    xSemaphoreGive(coordinateLockSemaphore);
   }
   // long waitingTime = millis();
   // while (!detectedObjectQ && millis() - waitingTime < 20)
   //   delay(1); // wait for the camera to detect an object in another core
-  if (detectedObjectQ) {
-    cameraCoolDown = CAM_COOL_DOWN;
-    if (cameraPrintQ) {
-      showRecognitionResult(xCoord, yCoord, width);
-      PTL();
-      if (cameraPrintQ == 1)
-        cameraPrintQ = 0;  // if the command is XCp, the camera will print the result only once
-      else
-        FPS();
+    
+    if (xSemaphoreTake (coordinateLockSemaphore, (50 * portTICK_PERIOD_MS))) { 
+      if (detectedObjectQ) {
+        cameraCoolDown = CAM_COOL_DOWN;
+        if (cameraPrintQ) {
+          showRecognitionResult(xCoord, yCoord, width);
+          PTL();
+          if (cameraPrintQ == 1)
+            cameraPrintQ = 0;  // if the command is XCp, the camera will print the result only once
+          else
+            FPS();
+        }
+      }
+      long frame_delay = millis() - camFrameTimer;
+      int target_xCoord = xCoord + frame_delay * xSpeed;
+      int target_yCoord = yCoord + frame_delay * ySpeed;
+      cameraBehavior(target_xCoord, target_yCoord, width);
+      if (!cameraCoolDown) {
+        if (!(cameraCoolDown % 20))
+          PTL(cameraCoolDown);
+        cameraCoolDown--;
+      }
+      xSemaphoreGive (coordinateLockSemaphore);
+    } else {  // if the semaphore was not acquired within 200ms
+      Serial.print ("cameraBehavior not acquired at ");
+      Serial.println (xTaskGetTickCount());
     }
-  }
-  cameraBehavior(xCoord, yCoord, width);
-  if (!cameraCoolDown) {
-    if (!(cameraCoolDown % 20))
-      PTL(cameraCoolDown);
-    cameraCoolDown--;
-  }
 }
 #ifdef MU_CAMERA
 MuVisionSensor *Mu;
@@ -432,15 +445,24 @@ void read_MuCamera() {
   if (cameraSetupSuccessful) {
     if ((*Mu).GetValue(object[objectIdx], kStatus)) {  // update vision result and get status, 0: undetected, other:
       // PTL(objectName[objectIdx]);
+      long fps = 1000/ (millis() - noResultTime);
+      PTT("\tmu fps: ", fps);
       noResultTime = millis();  // update the timer
-      updateCoordinateLock = true;
-      xCoord = (int)(*Mu).GetValue(object[objectIdx], kXValue);
-      yCoord = (int)(*Mu).GetValue(object[objectIdx], kYValue);
-      width = (int)(*Mu).GetValue(object[objectIdx], kWidthValue);
+    int mu_x = (int)(*Mu).GetValue(object[objectIdx], kXValue);
+    int mu_y = (int)(*Mu).GetValue(object[objectIdx], kXValue);
+    int mu_width = (int)(*Mu).GetValue(object[objectIdx], kWidthValue);
+    if (xSemaphoreTake (coordinateLockSemaphore, (60 * portTICK_PERIOD_MS))) { 
+      camFrameTimer = millis();
+      xSpeed = mu_x - xCoord;
+      ySpeed = mu_y - yCoord;
+      xCoord = mu_x;
+      yCoord = mu_y;
+      width = mu_width;
       // height = (int)(*Mu).GetValue(VISION_BODY_DETECT, kHeightValue);
-      updateCoordinateLock = false;
       // vvvvvvvvvvvv ball vvvvvvvvvvvvv
       detectedObjectQ = true;
+      xSemaphoreGive(coordinateLockSemaphore);
+    }
       if (objectIdx == 1) {
         int ballType = (*Mu).GetValue(object[objectIdx], kLabel);
         if (lastBallType != ballType) {

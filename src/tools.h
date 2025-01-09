@@ -194,6 +194,14 @@ void FPS() {
   }
 }
 
+void camFPS() {
+  long nowT = millis();
+  long camfps = 1000/(nowT - camLoopTimer);
+  camLoopTimer = nowT;
+  PT("\t\tcam FPS: ");
+  PTL(camfps);
+}
+
 void leftTrimSpaces(char *s, int *len) {
   char *head = s;
   while (*head == ' ' || *head == '\t') {

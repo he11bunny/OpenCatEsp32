@@ -357,6 +357,7 @@ int uptime = -1;
 int frame = 0;
 int tStep = 1;
 long loopTimer;
+long camLoopTimer;
 byte fps = 0;
 // long wdtTimer;
 
@@ -390,6 +391,8 @@ bool workingStiffness = true;
 bool manualEyeColorQ = false;
 int8_t cameraPrintQ = 0;
 bool cameraReactionQ = true;
+
+SemaphoreHandle_t coordinateLockSemaphore = NULL;
 bool updateCoordinateLock = false;
 bool detectedObjectQ = false;
 int cameraCoolDown = 10;
