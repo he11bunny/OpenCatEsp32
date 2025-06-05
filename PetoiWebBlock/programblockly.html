@@ -19,6 +19,8 @@
   <script src="./blocks/sensor.js"></script>
   <script src="./blocks/motion.js"></script>
   <script src="./blocks/generators.js"></script>
+  <!-- 5. 加载 WebSocket 客户端 -->
+  <script src="./js/petoi_async_client.js"></script>
 
   <style>
     body {
@@ -774,100 +776,7 @@
     });
 
     // 全局异步客户端类定义
-    class PetoiAsyncClient
-    {
-      constructor(baseUrl = null)
-      {
-        this.baseUrl = baseUrl || "http://" + window.location.hostname;
-        this.taskTimeout = 10000;
-      }
-
-      async sendCommand(cmd)
-      {
-        try
-        {
-          const response = await fetch(this.baseUrl + "/?cmd=" + encodeURIComponent(cmd));
-
-          // 检查HTTP响应状态
-          if (!response.ok)
-          {
-            throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
-          }
-
-          const responseText = await response.text();
-
-          if (responseText.startsWith('TASK_ID:'))
-          {
-            const taskId = responseText.replace('TASK_ID:', '').trim();
-            return await this.waitForCompletion(taskId);
-          } else
-          {
-            // 如果没有任务ID，说明是同步命令，直接返回响应
-            return responseText;
-          }
-        } catch (error)
-        {
-          // 提供更详细的错误信息
-          let errorMsg = getText("commandSendFailed") + ": ";
-
-          if (error.name === 'TypeError' && error.message.includes('Failed to fetch'))
-          {
-            errorMsg += getText("deviceConnectionLost").replace("{ip}", this.baseUrl.replace("http://", ""));
-          }
-          else if (error.message.includes('ERR_CONNECTION_RESET'))
-          {
-            errorMsg += getText("deviceConnectionLost").replace("{ip}", this.baseUrl.replace("http://", ""));
-          }
-          else
-          {
-            errorMsg += error.message;
-          }
-
-          throw new Error(errorMsg);
-        }
-      }
-
-      async waitForCompletion(taskId)
-      {
-        const startTime = Date.now();
-        while (Date.now() - startTime < this.taskTimeout)
-        {
-          try
-          {
-            const response = await fetch(this.baseUrl + "/status?taskId=" + taskId);
-            const status = await response.text();
-
-            if (status.startsWith('completed'))
-            {
-              // 正确处理多行返回数据
-              let result = status;
-              if (status.indexOf('\n') !== -1)
-              {
-                // 如果有换行符，提取completed后的所有内容
-                result = status.substring(status.indexOf('\n') + 1);
-              } else
-              {
-                // 如果没有换行符，可能是单行格式如"completed 4094 R"
-                result = status.substring('completed'.length).trim();
-              }
-              return result;
-            } else if (status.startsWith('error'))
-            {
-              throw new Error(status);
-            } else
-            {
-              // 任务还在运行，等待一下再查询
-              await new Promise(resolve => setTimeout(resolve, 100));
-            }
-          } catch (error)
-          {
-            console.error(getText("taskQueryFailed"), error);
-            await new Promise(resolve => setTimeout(resolve, 200));
-          }
-        }
-        throw new Error(getText("taskTimeout"));
-      }
-    }
+    // PetoiAsyncClient 类已移动到 petoi_async_client.js 文件中
 
     // 全局异步HTTP请求函数
     function httpRequest(ip, cmd, timeout = 2000, needResponse = true)
@@ -883,11 +792,16 @@
 
         try
         {
-          // 为每个请求创建新的客户端实例，确保使用正确的IP
-          const client = new PetoiAsyncClient("http://" + ip);
+          // 使用全局的 WebSocket 客户端实例
+          if (!window.client) {
+            reject(new Error(getText("noConnectionEstablished")));
+            return;
+          }
 
-          const result = await client.sendCommand(cmd);
-
+          // 发送命令并等待执行结果
+          const result = await window.client.sendCommand(cmd);
+          
+          // 根据 needResponse 参数决定是否返回结果
           resolve(needResponse ? result : true);
         } catch (error)
         {
@@ -2344,10 +2258,9 @@
       Blockly.JavaScript.INFINITE_LOOP_TRAP =
         'if (--window.LoopTrap < 0) throw "无限循环";\n';
 
-      // 修改：查找工作区中的'make_connection'积木块（Connect with IP）
+      // 查找工作区中的'make_connection'积木块（Connect with IP）
       const makeConnectionBlocks = workspace.getBlocksByType('make_connection');
 
-      // 如果没有找到make_connection积木块，显示错误信息
       if (makeConnectionBlocks.length === 0)
       {
         console.error(getText("noConnectionBlockError") || "错误：请添加一个'Connect with IP'积木块并将代码连接在其下方！");
@@ -2355,54 +2268,38 @@
         return;
       }
 
-      // 如果找到多个make_connection积木块，使用第一个
       const mainBlock = makeConnectionBlocks[0];
-
-      // 准备一个临时的工作区，只包含我们要运行的代码
       const tempWorkspace = new Blockly.Workspace();
-
-      // 复制主块及其所有连接的块到临时工作区
-      // 先克隆主块
       const clonedMainBlock = Blockly.serialization.blocks.save(mainBlock);
       Blockly.serialization.blocks.append(clonedMainBlock, tempWorkspace);
-
-      // 生成临时工作区的代码
       var code = Blockly.JavaScript.workspaceToCode(tempWorkspace);
-
-      // 清理临时工作区
       tempWorkspace.dispose();
-
       Blockly.JavaScript.INFINITE_LOOP_TRAP = null;
 
-      // 添加辅助函数确保异步操作按顺序执行
+      // 注入WebSocket客户端和辅助函数
       const asyncHelper = `
-          // 辅助函数，确保异步打印能够立即执行
-          function asyncLog(message) {
-            return new Promise((resolve) => {
-              console.log(message);
-              // 强制浏览器更新DOM
-              setTimeout(resolve, 0);
-            });
-          }
+        function asyncLog(message) {
+          return new Promise((resolve) => {
+            console.log(message);
+            setTimeout(resolve, 0);
+          });
+        }
+      `;
 
-        // 注意：httpRequest和PetoiAsyncClient已在全局定义，无需重复定义
-        `;
-
-      // 将普通的console.log替换为使用asyncLog的形式
+      // 替换所有 console.log 为 asyncLog
       code = code.replace(/console\.log\((.*?)\);/g, 'await asyncLog($1);');
 
       // 包装整个代码到一个异步函数中
       code = asyncHelper + "\n(async function() {\n" + code + "\n" +
         "try {\n" +
         "  // 程序结束时自动发送休息指令'd'\n" +
-        "  if(currentDeviceIP) {\n" +
-        "    await asyncLog(getText('programEndingRestCommand'));\n" +
-        "    await httpRequest(currentDeviceIP, 'd', 2000, true);\n" +
-        "  }\n" +
+        "  await asyncLog(getText('programEndingRestCommand'));\n" +
+        "  await httpRequest(deviceIP, 'd', 2000, true);\n" +
+        "  await closeConnection();\n" +
         "} catch(e) {\n" +
         "  console.error(getText('restCommandFailed') + e.message);\n" +
         "}\n" +
-        "console.log(getText('taskEnded'));" + // 添加任务结束消息
+        "console.log(getText('taskEnded'));" +
         "\n})().catch(e => { console.error(getText('networkRequestError') + ': ' + e.message); alert(getText('networkRequestError') + ': ' + e.message); });";
 
       try
@@ -2410,6 +2307,8 @@
         eval(code);
       } catch (e)
       {
+        console.info("code:");
+        console.info(code);
         console.error(getText("networkRequestError") + ": " + e.message);
         alert(getText("networkRequestError") + ": " + e.message);
       }
@@ -3051,7 +2950,7 @@
     }
 
     // 处理检测到的IP地址
-    function processDetectedIP(ip)
+    async function processDetectedIP(ip)
     {
       if (!ip) return;
 

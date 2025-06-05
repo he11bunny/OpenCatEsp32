@@ -45,52 +45,42 @@ Blockly.defineBlocksWithJsonArray([
   },
 ]);
 
-// 连接机器人函数实现 - 异步版本
-async function makeConnection(ip, timeout = 2000)
-{
-  try
-  {
-    // 连接设备：使用IP发送问号命令
-    // console.log(getText("connectingDevice") + ip);
-
-    // 使用异步HTTP请求函数发送问号命令
-    const model = await httpRequest(ip, '?', timeout, true);
-    // console.log(getText("deviceResponseInfo") + model);
-
+// 连接机器人函数实现 - WebSocket版本
+async function makeConnection(ip, timeout = 2000) {
+  try {
+    // 创建WebSocket客户端
+    const client = new PetoiAsyncClient(`ws://${ip}:81`);
+    
+    // 尝试连接
+    await client.connect();
+    
+    // 发送问号命令测试连接
+    const model = await client.sendCommand('?');
+    
     // 更严格地检查响应内容，特别识别模拟数据
-    if (model && model.length > 0 && model.trim() !== '?' && model.trim() !== '' && model.trim() !== 'PetoiModel-v1.0')
-    {
+    if (model && model.length > 0 && model.trim() !== '?' && model.trim() !== '' && model.trim() !== 'PetoiModel-v1.0') {
       setDeviceIP(ip);
       setDeviceModel(model);
-      // console.log(getText("deviceModelInfo") + model);
+      // 设置全局客户端实例
+      window.client = client;
       return true;
-    } else
-    {
-      if (model.trim() === 'PetoiModel-v1.0')
-      {
-        // console.error(getText("errorMockData"));
+    } else {
+      if (model.trim() === 'PetoiModel-v1.0') {
         alert(getText("connectionFailedMock") + '\n\n' + getText("programExecutionStopped"));
-      } else
-      {
+      } else {
         alert(getText("connectionFailedCheck") + '\n\n' + getText("programExecutionStopped"));
       }
       return false;
     }
-  } catch (err)
-  {
-    // console.error(getText("connectionError") + err.message);
+  } catch (err) {
     // 显示友好的错误信息，并明确说明程序已中断
-    if (err.message.includes('timeout') || err.message.includes('超时'))
-    {
+    if (err.message.includes('timeout') || err.message.includes('超时')) {
       alert(getText("connectionTimeout").replace("{ip}", ip) + '\n\n' + getText("programExecutionStopped"));
-    } else if (err.message.includes('Failed to fetch') || err.message.includes('Connection reset') || err.message.includes('ERR_CONNECTION_RESET'))
-    {
+    } else if (err.message.includes('Failed to fetch') || err.message.includes('Connection reset') || err.message.includes('ERR_CONNECTION_RESET')) {
       alert(getText("deviceConnectionLost").replace("{ip}", ip) + '\n\n' + getText("checkDeviceAndNetwork") + '\n\n' + getText("programExecutionStopped"));
-    } else if (err.message.includes('Network Error') || err.message.includes('网络'))
-    {
+    } else if (err.message.includes('Network Error') || err.message.includes('网络')) {
       alert(getText("networkError").replace("{ip}", ip) + '\n\n' + getText("programExecutionStopped"));
-    } else
-    {
+    } else {
       alert(getText("connectionErrorDetails").replace("{error}", err.message) + '\n\n' + getText("programExecutionStopped"));
     }
     return false;
@@ -321,3 +311,19 @@ javascript.javascriptGenerator.forBlock['console_log_variable'] = function (bloc
   // 使用asyncLog函数确保消息立即显示并且按顺序执行
   return `await asyncLog("${varName}: " + (${value}));`;
 };
+
+// 关闭连接函数实现
+async function closeConnection() {
+  try {
+    if (window.client) {
+      await window.client.disconnect();
+      // 清除全局客户端实例
+      window.client = null;
+      return true;
+    }
+    return false;
+  } catch (err) {
+    console.error(getText("closeConnectionError"), err);
+    return false;
+  }
+}
