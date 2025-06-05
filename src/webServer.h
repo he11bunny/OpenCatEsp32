@@ -42,7 +42,6 @@ void completeWebTask();
 void errorWebTask(String errorMessage);
 void processNextWebTask();
 void handleWebSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length);
-void checkHeartbeats();
 
 // 生成任务ID
 String generateTaskId()
@@ -135,29 +134,6 @@ void handleWebSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
         PTHL("task ID: ", taskId);
       }
       break;
-    }
-  }
-}
-
-// 检查心跳超时
-void checkHeartbeats() {
-  unsigned long currentTime = millis();
-  for (auto it = lastHeartbeat.begin(); it != lastHeartbeat.end();) {
-    if (currentTime - it->second > HEARTBEAT_TIMEOUT) {
-      uint8_t clientId = it->first;
-      PTHL("Client heartbeat timeout: ", clientId);
-      webSocket.disconnect(clientId);
-      connectedClients.erase(clientId);
-      it = lastHeartbeat.erase(it);
-    } else {
-      // 发送心跳消息
-      StaticJsonDocument<128> heartbeatDoc;
-      heartbeatDoc["type"] = "heartbeat";
-      heartbeatDoc["timestamp"] = currentTime;
-      String heartbeatMsg;
-      serializeJson(heartbeatDoc, heartbeatMsg);
-      webSocket.sendTXT(it->first, heartbeatMsg);
-      ++it;
     }
   }
 }
@@ -354,7 +330,6 @@ void WebServerLoop()
 {
   if (webServerConnected) {
     webSocket.loop();
-    checkHeartbeats(); // 检查心跳
 
     // 检查任务超时
     unsigned long currentTime = millis();
