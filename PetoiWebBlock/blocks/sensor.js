@@ -1,4 +1,4 @@
-// 定义陀螺仪控制积木块
+// 定义陀螺仪控制和传感器输入积木块
 Blockly.defineBlocksWithJsonArray([
   {
     type: 'gyro_control',
@@ -19,22 +19,7 @@ Blockly.defineBlocksWithJsonArray([
     colour: 230,
     tooltip: "控制陀螺仪模块的启用和禁用",
     helpUrl: ""
-  }
-]);
-
-// 生成陀螺仪控制的代码
-javascript.javascriptGenerator.forBlock['gyro_control'] = function (block)
-{
-  const action = block.getFieldValue('ACTION');
-  const value = action === 'enable' ? 'B' : 'b';
-  const message = action === 'enable' ? '已启用' : '已禁用';
-
-  return `console.log(await httpRequest(deviceIP, "G${value}", 2000, true));
-console.log("陀螺仪${message}");\n`;
-};
-
-// 定义传感器输入积木
-Blockly.defineBlocksWithJsonArray([
+  },
   {
     type: 'get_sensor_input',
     message0: "获取传感器 %1",
@@ -56,10 +41,3 @@ Blockly.defineBlocksWithJsonArray([
     helpUrl: ""
   }
 ]);
-
-// 代码生成器保持不变
-javascript.javascriptGenerator.forBlock['get_sensor_input'] = function (block)
-{
-  var sensor = block.getFieldValue('SENSOR');
-  return [`parseInt(await httpRequest(deviceIP, "${sensor}", 2000, true)) || 0`, Blockly.JavaScript.ORDER_FUNCTION_CALL];
-};

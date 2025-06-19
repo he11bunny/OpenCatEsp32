@@ -3,12 +3,13 @@
  * 实现实时双向通信
  */
 
+
 class PetoiAsyncClient
 {
     constructor(baseUrl = null)
     {
         this.baseUrl = baseUrl || `ws://${window.location.hostname}:81`;
-        this.taskTimeout = 10000; // 10秒超时
+        this.taskTimeout = 30000; // 30秒超时
         this.ws = null;
         this.connected = false;
         this.pendingTasks = new Map();
@@ -20,6 +21,7 @@ class PetoiAsyncClient
         this.heartbeatIntervalMs = 10000; // 10秒发送一次心跳
         this.heartbeatTimeoutMs = 15000;  // 15秒没有响应就重连
         this.lastHeartbeatTime = 0;       // 记录最后一次心跳时间
+        this.eventTarget = new EventTarget();
     }
 
     /**
@@ -37,11 +39,15 @@ class PetoiAsyncClient
                 
                 // 设置心跳超时
                 this.heartbeatTimeout = setTimeout(() => {
-                    console.log('[心跳] 超时，准备重连');
+                    console.log(getText('heartbeatTimeout'));
                     this.ws.close();
                 }, this.heartbeatTimeoutMs);
             }
         }, this.heartbeatIntervalMs);
+        // 延时1秒后发送心跳
+        // setTimeout(() => {
+        //     this.sendHeartbeat();
+        // }, 1000);
     }
 
     /**
@@ -52,7 +58,7 @@ class PetoiAsyncClient
         if (this.heartbeatInterval) {
             clearInterval(this.heartbeatInterval);
             this.heartbeatInterval = null;
-            console.log('[心跳] 停止心跳检测');
+            console.log(getText('heartbeatStopped'));
         }
         if (this.heartbeatTimeout) {
             clearTimeout(this.heartbeatTimeout);
@@ -71,36 +77,23 @@ class PetoiAsyncClient
             this.ws.onopen = () => {
                 this.connected = true;
                 this.reconnectAttempts = 0;
-                console.log('[WebSocket] 连接已建立');
+                console.log(getText('websocketConnected'));
                 this.lastHeartbeatTime = Date.now();
-                this.startHeartbeat(); // 启动心跳
                 resolve();
             };
 
             this.ws.onclose = () => {
                 this.connected = false;
                 this.stopHeartbeat(); // 停止心跳
-                console.log('[WebSocket] 连接已关闭');
+                console.log(getText('websocketClosed'));
             };
 
             this.ws.onerror = (error) => {
-                console.error('[WebSocket] 错误:', error);
+                console.error(getText('websocketError'), error);
                 reject(error);
             };
 
             this.ws.onmessage = (event) => {
-                // 处理心跳响应
-                if (event.data === 'pong') {
-                    const now = Date.now();
-                    const latency = now - this.lastHeartbeatTime;
-                    console.log(`[心跳] 收到pong (延迟: ${latency}ms)`);
-                    if (this.heartbeatTimeout) {
-                        clearTimeout(this.heartbeatTimeout);
-                        this.heartbeatTimeout = null;
-                    }
-                    return;
-                }
-                
                 this.handleMessage(event.data);
             };
         });
@@ -113,10 +106,10 @@ class PetoiAsyncClient
     {
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
-            console.log(`[重连] 尝试重连 (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+            console.log(getText('reconnectAttempt').replace('{current}', this.reconnectAttempts).replace('{max}', this.maxReconnectAttempts));
             setTimeout(() => this.connect(), this.reconnectDelay);
         } else {
-            console.error('[重连] 达到最大重连次数，请检查网络连接');
+            console.error(getText('maxReconnectAttempts'));
         }
     }
 
@@ -128,7 +121,7 @@ class PetoiAsyncClient
         if (this.ws && this.connected) {
             const now = Date.now();
             const timeSinceLastHeartbeat = now - this.lastHeartbeatTime;
-            console.log(`[心跳] 发送心跳 (距离上次心跳: ${timeSinceLastHeartbeat}ms)`);
+            console.log(getText('heartbeatSent').replace('{time}', timeSinceLastHeartbeat));
             
             const heartbeatMessage = {
                 type: 'heartbeat',
@@ -145,15 +138,20 @@ class PetoiAsyncClient
     handleMessage(data)
     {
         try {
+            console.log('handleMessage', data);
             // 清理数据中的特殊字符
             const cleanData = data.replace(/[\r\n\t\f\v]/g, ' ').trim();
             const message = JSON.parse(cleanData);
-            
+            //print message type
+            console.log('message type', message.type);
             // 处理心跳响应
             if (message.type === 'heartbeat') {
                 const now = Date.now();
                 const latency = now - this.lastHeartbeatTime;
-                console.log(`[心跳] 收到心跳响应 (延迟: ${latency}ms)`);
+                console.log(getText('heartbeatResponse').replace('{latency}', latency));
+                //mock event
+                this.eventTarget.dispatchEvent(new CustomEvent('event_us', { detail: { distance: 150 } }));
+                this.eventTarget.dispatchEvent(new CustomEvent('event_cam', { detail: { x: -20.5, y: 15.0, width: 50, height: 50 } }));
                 if (this.heartbeatTimeout) {
                     clearTimeout(this.heartbeatTimeout);
                     this.heartbeatTimeout = null;
@@ -163,7 +161,7 @@ class PetoiAsyncClient
 
             // 处理错误消息
             if (message.error) {
-                console.error('服务器错误:', message.error);
+                console.error(getText('serverError'), message.error);
                 return;
             }
 
@@ -176,7 +174,11 @@ class PetoiAsyncClient
                         task.onProgress && task.onProgress(message);
                         break;
                     case 'completed':
-                        task.resolve(message.result);
+                        if (message.results.length > 0) {
+                            task.resolve(message.results);
+                        } else {
+                            task.reject(new Error("response no results"));
+                        }
                         this.pendingTasks.delete(message.taskId);
                         break;
                     case 'error':
@@ -184,20 +186,35 @@ class PetoiAsyncClient
                         this.pendingTasks.delete(message.taskId);
                         break;
                 }
+                return;
+            }
+
+            if (message.event) {
+                this.eventTarget.dispatchEvent(new CustomEvent(message.event, message));
             }
         } catch (error) {
-            console.error('消息处理错误:', error);
-            console.error('原始数据:', data);
+            console.error(getText('messageProcessingError'), error);
+            console.error(getText('rawData'), data);
         }
     }
 
     /**
      * 发送命令
+     * @param {string|Array} command - 单个命令或命令数组
+     * @param {number} timeout - 超时时间（毫秒）
+     * @returns {Promise} - 返回命令执行完成后的结果
      */
     async sendCommand(command, timeout = this.taskTimeout)
     {
         if (!this.connected) {
-            throw new Error('未连接到服务器');
+            throw new Error(getText('notConnected'));
+        }
+
+        // 将单个命令转换为命令数组
+        const commands = Array.isArray(command) ? command : [command];
+
+        if (commands.length === 0) {
+            throw new Error('Invalid command');
         }
 
         return new Promise((resolve, reject) => {
@@ -205,27 +222,32 @@ class PetoiAsyncClient
             const message = {
                 type: 'command',
                 taskId: taskId,
-                command: command,
+                commands: commands,
                 timestamp: Date.now()
             };
 
             const timeoutId = setTimeout(() => {
                 this.pendingTasks.delete(taskId);
-                reject(new Error('命令执行超时'));
+                reject(new Error(getText('commandTimeout')));
             }, timeout);
 
             this.pendingTasks.set(taskId, {
                 resolve: (result) => {
                     clearTimeout(timeoutId);
-                    resolve(result);
+                    if (Array.isArray(command)) {
+                        resolve(result.map(item => parseInt(item) || 0));
+                    } else {
+                        resolve(result[0]);
+                    }
                 },
                 reject: (error) => {
                     clearTimeout(timeoutId);
                     reject(error);
                 }
             });
-
-            this.ws.send(JSON.stringify(message));
+            const messageStr = JSON.stringify(message);
+            console.log('send message', messageStr);
+            this.ws.send(messageStr);
         });
     }
 
@@ -241,40 +263,6 @@ class PetoiAsyncClient
             this.ws = null;
             this.connected = false;
         }
-    }
-
-    /**
-     * 等待任务完成
-     */
-    async waitForCompletion(taskId)
-    {
-        const startTime = Date.now();
-
-        while (Date.now() - startTime < this.taskTimeout)
-        {
-            try
-            {
-                const response = await fetch(`${this.baseUrl}/status?taskId=${taskId}`);
-                const text = await response.text();
-                const lines = text.trim().split('\n');
-                const status = lines[0];
-                const result = lines.slice(1).join('\n');
-
-                if (status === 'completed')
-                {
-                    return result;
-                } else if (status === 'error')
-                {
-                    throw new Error(result);
-                }
-
-                await this.delay(100);
-            } catch (error)
-            {
-                throw new Error(`任务执行失败: ${error.message}`);
-            }
-        }
-        throw new Error('任务执行超时');
     }
 
     /**

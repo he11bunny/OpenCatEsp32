@@ -6,6 +6,13 @@ const TRANSLATIONS = {
     "runCode": "运行代码",
     "saveProgram": "保存程序",
     "loadProgram": "加载程序",
+    "uploadSkill": "上传技能",
+    "uploadedSkills": "已上传的技能",
+    "skillFileUploaded": "技能文件已上传：{filename}",
+    "skillFileUploadFailed": "技能文件上传失败",
+    "skillLoaded": "已加载技能：{filename}",
+    "skillLoadFailed": "技能加载失败",
+    "serialNotConnected": "请先连接串口",
     "clearAll": "清除全部",
     "clearConsole": "清除日志",
     "consoleLog": "控制台日志",
@@ -65,6 +72,7 @@ const TRANSLATIONS = {
     "categoryControl": "控制",
     "categoryConsole": "控制台",
     "categoryMusic": "音乐",
+    "categoryLists": "列表",
 
     // 积木文本 - 通信
     "connectWithIP": "连接IP地址 %1",
@@ -74,9 +82,19 @@ const TRANSLATIONS = {
     "setDigitalOutput": "设置数字输出 引脚 %1 状态 %2",
     "setAnalogOutput": "设置模拟输出 引脚 %1 数值 %2",
     "sendCustomCommand": "发送自定义命令 %1",
+    "trackUltrasonicDistance": "变量 %1 获取超声波传感器距离(cm): 触发 %2 回响 %3",
+    "getUltrasonicDistance": "获取超声波传感器距离(cm): 触发 %1 回响 %2",
+    "trackCameraCoordinate": "变量 %1 摄像头识别目标的坐标值(x, y, width, height)",
+    "getCameraCoordinate": "获取摄像头识别目标的坐标值(x, y, width, height)",
 
     // 积木文本 - 动作
     "setMotorAngle": "设置关节 %1 角度为 %2",
+    "setMotorRelativeAngle": "设置关节角度 %1 %2 %3度",
+    "setJointAngle": "设置关节角度 %1 后延时 %2 秒",
+    "setJointsAngleGroupSeq": "依次设置关节角度 %1 后延时 %2 秒",
+    "setJointsAngleGroupSim": "同时设置关节角度 %1 后延时 %2 秒",
+    "jointAbsoluteAngleValue": "关节 %1 角度为 %2",
+    "jointRelativeAngleValue": "关节 %1 角度 %2 %3 度",
     "getJointAngle": "获取关节 %1 的角度",
     "getAllJointAngles": "获取所有关节角度",
     "gait": "步态 %1",
@@ -100,7 +118,8 @@ const TRANSLATIONS = {
     "consoleLogVariable": "在控制台输出变量 %1",
 
     // 积木文本 - 音乐
-    "playNote": "播放音符 %1 时长 %2 拍",
+    "playNoteMessage": "播放音符 %1 持续 %2 拍",
+    "playMelodyMessage": "播放旋律 %1",
 
     // 动作选项
     "stand": "站立",
@@ -267,6 +286,9 @@ const TRANSLATIONS = {
     "acrobaticFrontflip": "前空翻",
     "acrobaticJump": "跳跃",
 
+    // Robot arm action options
+    "armActionMessage": "执行机械臂技能 %1 后延时 %2 秒",
+
     // Code dialog UI text
     "generatedJSCode": "生成的JavaScript代码",
     "copyCode": "复制代码",
@@ -301,6 +323,42 @@ const TRANSLATIONS = {
     "taskTimeout": "任务超时",
     "httpRequestError": "HTTP请求错误",
     "programExecutionError": "程序执行错误",
+
+    // WebSocket客户端相关
+    "heartbeatTimeout": "[心跳] 超时，准备重连",
+    "heartbeatStopped": "[心跳] 停止心跳检测",
+    "heartbeatSent": "[心跳] 发送心跳 (距离上次心跳: {time}ms)",
+    "heartbeatReceived": "[心跳] 收到pong (延迟: {latency}ms)",
+    "heartbeatResponse": "[心跳] 收到心跳响应 (延迟: {latency}ms)",
+    "websocketConnected": "[WebSocket] 连接已建立",
+    "websocketClosed": "[WebSocket] 连接已关闭",
+    "websocketError": "[WebSocket] 错误:",
+    "reconnectAttempt": "[重连] 尝试重连 ({current}/{max})...",
+    "maxReconnectAttempts": "[重连] 达到最大重连次数，请检查网络连接",
+    "serverError": "服务器错误:",
+    "messageProcessingError": "消息处理错误:",
+    "rawData": "原始数据:",
+    "notConnected": "未连接到服务器",
+    "commandTimeout": "命令执行超时",
+    "taskFailed": "任务执行失败: {error}",
+    "armPickDown": "向下拾取",
+    "armPickFront": "向前拾取",
+    "armPickLeft": "向左拾取",
+    "armPickRight": "向右拾取",
+    "armPutDown": "向下放置",
+    "armPutFront": "向前放置",
+    "armPutLeft": "向左放置",
+    "armPutRight": "向右放置",
+    "armShoot": "射击",
+    "armThrowFront": "向前投掷",
+    "armThrowLeft": "向左投掷",
+    "armThrowRight": "向右投掷",
+    "armHunt": "狩猎",
+    "armShowOff": "炫耀",
+    "armClap": "鼓掌",
+    "blockRunError": "消息处理错误:",
+    "enterFileName": "请输入文件名:",
+    "actionSkillFile": "执行技能文件 %1 中的技能后延时 %2 秒"
   },
 
   en: {
@@ -310,6 +368,13 @@ const TRANSLATIONS = {
     "runCode": "Run Code",
     "saveProgram": "Save Program",
     "loadProgram": "Load Program",
+    "uploadSkill": "Upload Skill",
+    "uploadedSkills": "Uploaded Skills",
+    "skillFileUploaded": "Skill file uploaded: {filename}",
+    "skillFileUploadFailed": "Failed to upload skill file",
+    "skillLoaded": "Skill loaded: {filename}",
+    "skillLoadFailed": "Failed to load skill",
+    "serialNotConnected": "Please connect to serial port first",
     "clearAll": "Clear All",
     "clearConsole": "Clear Log",
     "consoleLog": "Console Log",
@@ -369,6 +434,7 @@ const TRANSLATIONS = {
     "categoryControl": "Control",
     "categoryConsole": "Console",
     "categoryMusic": "Music",
+    "categoryLists": "Lists",
 
     // Block text - Communication
     "connectWithIP": "Connect with IP %1",
@@ -378,9 +444,19 @@ const TRANSLATIONS = {
     "setDigitalOutput": "Set Digital Output Pin %1 State %2",
     "setAnalogOutput": "Set Analog Output Pin %1 Value %2",
     "sendCustomCommand": "Send Custom Command %1",
+    "trackUltrasonicDistance": "Variable %1 get ultrasonic sensor distance(cm): Trigger %2 Echo %3",
+    "getUltrasonicDistance": "Get ultrasonic sensor distance(cm): Trigger %1 Echo %2",
+    "trackCameraCoordinate": "Variable %1 camera detected target coordinates(x, y, width, height)",
+    "getCameraCoordinate": "Get camera detected target coordinates(x, y, width, height)",
 
     // Block text - Motion
     "setMotorAngle": "Set Joint %1 Angle to %2",
+    "setMotorRelativeAngle": "Set Joint %1 Angle %2 %3",
+    "setJointAngle": "Set joint angle %1 then delay %2 sec",
+    "setJointsAngleGroupSeq": "Set joint angles sequentially %1 then delay %2 sec",
+    "setJointsAngleGroupSim": "Set joint angles simultaneously %1 then delay %2 sec",
+    "jointAbsoluteAngleValue": "Joint %1 angle to %2",
+    "jointRelativeAngleValue": "Joint %1 angle %2 %3 degrees",
     "getJointAngle": "Get Joint %1 Angle",
     "getAllJointAngles": "Get All Joint Angles",
     "gait": "Gait %1",
@@ -404,7 +480,8 @@ const TRANSLATIONS = {
     "consoleLogVariable": "Log variable to console %1",
 
     // Block text - Music
-    "playNote": "Play note %1 for %2 beat",
+    "playNoteMessage": "Play note %1 for %2 beat",
+    "playMelodyMessage": "Play Melody %1",
 
     // Action options
     "sit": "Sit",
@@ -571,6 +648,9 @@ const TRANSLATIONS = {
     "acrobaticFrontflip": "Frontflip",
     "acrobaticJump": "Jump",
 
+    // Robot arm action options
+    "armActionMessage": "Execute robot arm skill %1 then delay %2 sec",
+
     // Code dialog UI text
     "generatedJSCode": "Generated JavaScript Code",
     "copyCode": "Copy Code",
@@ -605,6 +685,42 @@ const TRANSLATIONS = {
     "taskTimeout": "Task timeout",
     "httpRequestError": "HTTP request error",
     "programExecutionError": "Program execution error",
+
+    // WebSocket client related
+    "heartbeatTimeout": "[Heartbeat] Timeout, preparing to reconnect",
+    "heartbeatStopped": "[Heartbeat] Stopping heartbeat detection",
+    "heartbeatSent": "[Heartbeat] Sending heartbeat (time since last: {time}ms)",
+    "heartbeatReceived": "[Heartbeat] Received pong (latency: {latency}ms)",
+    "heartbeatResponse": "[Heartbeat] Received heartbeat response (latency: {latency}ms)",
+    "websocketConnected": "[WebSocket] Connection established",
+    "websocketClosed": "[WebSocket] Connection closed",
+    "websocketError": "[WebSocket] Error:",
+    "reconnectAttempt": "[Reconnect] Attempting to reconnect ({current}/{max})...",
+    "maxReconnectAttempts": "[Reconnect] Maximum reconnection attempts reached, please check network connection",
+    "serverError": "Server error:",
+    "messageProcessingError": "Message processing error:",
+    "rawData": "Raw data:",
+    "notConnected": "Not connected to server",
+    "commandTimeout": "Command execution timeout",
+    "taskFailed": "Task execution failed: {error}",
+    "armPickDown": "pick Down",
+    "armPickFront": "pick Front",
+    "armPickLeft": "pick Left",
+    "armPickRight": "pick Right",
+    "armPutDown": "put Down",
+    "armPutFront": "put Front",
+    "armPutLeft": "put Left",
+    "armPutRight": "put Right",
+    "armShoot": "shoot",
+    "armThrowFront": "throw Front",
+    "armThrowLeft": "throw Left",
+    "armThrowRight": "throw Right",
+    "armHunt": "hunt",
+    "armShowOff": "show off",
+    "armClap": "clap",
+    "blockRunError": "Message processing error:",
+    "enterFileName": "Please enter filename:",
+    "actionSkillFile": "Execute skill file %1 after delay %2 seconds"
   },
 
   ja: {
@@ -614,6 +730,13 @@ const TRANSLATIONS = {
     "runCode": "コードを実行",
     "saveProgram": "プログラムを保存",
     "loadProgram": "プログラムを読み込む",
+    "uploadSkill": "アップロードスキル",
+    "uploadedSkills": "アップロード済みスキル",
+    "skillFileUploaded": "スキルファイルアップロード完了：{filename}",
+    "skillFileUploadFailed": "スキルファイルアップロード失敗",
+    "skillLoaded": "スキルロード完了：{filename}",
+    "skillLoadFailed": "スキルロード失敗",
+    "serialNotConnected": "シリアルポートに接続してください",
     "clearAll": "すべてクリア",
     "clearConsole": "ログをクリア",
     "consoleLog": "コンソールログ",
@@ -673,6 +796,7 @@ const TRANSLATIONS = {
     "categoryControl": "制御",
     "categoryConsole": "コンソール",
     "categoryMusic": "音楽",
+    "categoryLists": "リスト",
 
     // ブロックテキスト - 通信
     "connectWithIP": "IPアドレスに接続 %1",
@@ -682,9 +806,19 @@ const TRANSLATIONS = {
     "setDigitalOutput": "デジタル出力ピン %1 状態 %2 を設定",
     "setAnalogOutput": "アナログ出力ピン %1 値 %2 を設定",
     "sendCustomCommand": "カスタムコマンドを送信 %1",
+    "trackUltrasonicDistance": "変数 %1 超音波センサー距離(cm)を取得: トリガー %2 エコー %3",
+    "getUltrasonicDistance": "超音波センサー距離(cm)を取得: トリガー %1 エコー %2",
+    "trackCameraCoordinate": "変数 %1 カメラ検出目標座標(x, y, width, height)",
+    "getCameraCoordinate": "カメラ検出目標座標(x, y, width, height)を取得",
 
     // ブロックテキスト - モーション
     "setMotorAngle": "関節 %1 の角度を %2 に設定",
+    "setMotorRelativeAngle": "関節 %1 を %2 %3度に設定",
+    "setJointAngle": "関節角度 %1 を設定し %2 秒待機",
+    "setJointsAngleGroupSeq": "関節角度を順次設定 %1 の後 %2 秒待機",
+    "setJointsAngleGroupSim": "関節角度を同時設定 %1 の後 %2 秒待機",
+    "jointAbsoluteAngleValue": "関節 %1 の角度を %2 に",
+    "jointRelativeAngleValue": "関節 %1 の角度 %2 %3度",
     "getJointAngle": "関節 %1 の角度を取得",
     "getAllJointAngles": "すべての関節角度を取得",
     "gait": "歩行パターン %1",
@@ -708,7 +842,8 @@ const TRANSLATIONS = {
     "consoleLogVariable": "変数をコンソールに出力 %1",
 
     // ブロックテキスト - 音楽
-    "playNote": "音符 %1 を %2 拍子分再生",
+    "playNoteMessage": "音符 %1 を %2 拍子分再生",
+    "playMelodyMessage": "メロディー %1 を再生",
 
     // アクションオプション
     "stand": "立つ",
@@ -875,7 +1010,10 @@ const TRANSLATIONS = {
     "acrobaticFrontflip": "前方宙返り",
     "acrobaticJump": "ジャンプ",
 
-    // コードダイアログUIテキスト
+    // Robot arm action options
+    "armActionMessage": "ロボットアームスキル %1 を実行し %2 秒待機",
+
+    // Code dialog UI text
     "generatedJSCode": "生成されたJavaScriptコード",
     "copyCode": "コードをコピー",
     "copySuccess": "コピー完了！",
@@ -915,6 +1053,42 @@ const TRANSLATIONS = {
     "taskTimeout": "タスクタイムアウト",
     "httpRequestError": "HTTPリクエストエラー",
     "programExecutionError": "プログラム実行エラー",
+
+    // WebSocket client related
+    "heartbeatTimeout": "[心跳] 超时，准备重连",
+    "heartbeatStopped": "[心跳] 停止心跳检测",
+    "heartbeatSent": "[心跳] 发送心跳 (距离上次心跳: {time}ms)",
+    "heartbeatReceived": "[心跳] 收到pong (延迟: {latency}ms)",
+    "heartbeatResponse": "[心跳] 收到心跳响应 (延迟: {latency}ms)",
+    "websocketConnected": "[WebSocket] 连接已建立",
+    "websocketClosed": "[WebSocket] 连接已关闭",
+    "websocketError": "[WebSocket] 错误:",
+    "reconnectAttempt": "[重连] 尝试重连 ({current}/{max})...",
+    "maxReconnectAttempts": "[重连] 达到最大重连次数，请检查网络连接",
+    "serverError": "服务器错误:",
+    "messageProcessingError": "消息处理错误:",
+    "rawData": "原始数据:",
+    "notConnected": "未连接到服务器",
+    "commandTimeout": "命令执行超时",
+    "taskFailed": "任务执行失败: {error}",
+    "armPickDown": "向下拾取",
+    "armPickFront": "向前拾取",
+    "armPickLeft": "向左拾取",
+    "armPickRight": "向右拾取",
+    "armPutDown": "向下放置",
+    "armPutFront": "向前放置",
+    "armPutLeft": "向左放置",
+    "armPutRight": "向右放置",
+    "armShoot": "射击",
+    "armThrowFront": "向前投掷",
+    "armThrowLeft": "向左投掷",
+    "armThrowRight": "向右投掷",
+    "armHunt": "狩猎",
+    "armShowOff": "炫耀",
+    "armClap": "鼓掌",
+    "blockRunError": "メッセージ処理エラー:",
+    "enterFileName": "ファイル名を入力してください:",
+    "actionSkillFile": "技能ファイル %1 の後 %2 秒待機"
   }
 };
 

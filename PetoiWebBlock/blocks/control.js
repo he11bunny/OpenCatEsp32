@@ -26,13 +26,3 @@ function delay(time_ms) {
       // Wait
     }
 }
-  
-// 延迟积木代码生成
-javascript.javascriptGenerator.forBlock['delay_ms'] = function(block) {
-  
-    // Use valueToCode for input_value
-    const time = block.getFieldValue('DELAY_MS');    
-    // Generate the code that will be executed
-    const code = `delay(${time});\n`;
-    return code;
-};

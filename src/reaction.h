@@ -1118,8 +1118,12 @@ void reaction()
       {
         if (cmdLen >= 3)
         {
+          int distance = readUltrasonic((int8_t)newCmd[1], (int8_t)newCmd[2]);
           printToAllPorts('=');
-          printToAllPorts(readUltrasonic((int8_t)newCmd[1], (int8_t)newCmd[2]));
+          printToAllPorts(distance);
+#ifdef WEB_SERVER
+          sendUltrasonicData(distance); // 发送超声波数据到WebSocket客户端
+#endif
         }
         break;
       }
@@ -1463,6 +1467,9 @@ void reaction()
     showRecognitionResult(xCoord, yCoord, width, height);
     PTL();
     FPS();
+#ifdef WEB_SERVER
+    sendCameraData(xCoord, yCoord, width, height); // 发送摄像头数据到WebSocket客户端
+#endif
   }
   else if (!cameraTaskActiveQ)
 #endif
