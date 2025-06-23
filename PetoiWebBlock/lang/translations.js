@@ -81,7 +81,7 @@ const TRANSLATIONS = {
     "getSensorInput": "获取传感器 %1",
     "setDigitalOutput": "设置数字输出 引脚 %1 状态 %2",
     "setAnalogOutput": "设置模拟输出 引脚 %1 数值 %2",
-    "sendCustomCommand": "发送自定义命令 %1",
+    "sendCustomCommand": "执行串口命令 %1 后延时 %2 秒",
     "trackUltrasonicDistance": "变量 %1 获取超声波传感器距离(cm): 触发 %2 回响 %3",
     "getUltrasonicDistance": "获取超声波传感器距离(cm): 触发 %1 回响 %2",
     "trackCameraCoordinate": "变量 %1 摄像头识别目标的坐标值(x, y, width, height)",
@@ -119,7 +119,7 @@ const TRANSLATIONS = {
 
     // 积木文本 - 音乐
     "playNoteMessage": "播放音符 %1 持续 %2 拍",
-    "playMelodyMessage": "播放旋律 %1",
+    "playMelodyMessage": "播放旋律 %1\n后延时 %2 秒",
 
     // 动作选项
     "stand": "站立",
@@ -443,7 +443,7 @@ const TRANSLATIONS = {
     "getSensorInput": "Get Sensor %1",
     "setDigitalOutput": "Set Digital Output Pin %1 State %2",
     "setAnalogOutput": "Set Analog Output Pin %1 Value %2",
-    "sendCustomCommand": "Send Custom Command %1",
+    "sendCustomCommand": "Send Custom Command %1 then delay %2 sec",
     "trackUltrasonicDistance": "Variable %1 get ultrasonic sensor distance(cm): Trigger %2 Echo %3",
     "getUltrasonicDistance": "Get ultrasonic sensor distance(cm): Trigger %1 Echo %2",
     "trackCameraCoordinate": "Variable %1 camera detected target coordinates(x, y, width, height)",
@@ -481,7 +481,7 @@ const TRANSLATIONS = {
 
     // Block text - Music
     "playNoteMessage": "Play note %1 for %2 beat",
-    "playMelodyMessage": "Play Melody %1",
+    "playMelodyMessage": "Play Melody %1\nthen delay %2 sec",
 
     // Action options
     "sit": "Sit",
@@ -805,7 +805,7 @@ const TRANSLATIONS = {
     "getSensorInput": "センサーを取得 %1",
     "setDigitalOutput": "デジタル出力ピン %1 状態 %2 を設定",
     "setAnalogOutput": "アナログ出力ピン %1 値 %2 を設定",
-    "sendCustomCommand": "カスタムコマンドを送信 %1",
+    "sendCustomCommand": "カスタムコマンドを送信 %1 の後 %2 秒待機",
     "trackUltrasonicDistance": "変数 %1 超音波センサー距離(cm)を取得: トリガー %2 エコー %3",
     "getUltrasonicDistance": "超音波センサー距離(cm)を取得: トリガー %1 エコー %2",
     "trackCameraCoordinate": "変数 %1 カメラ検出目標座標(x, y, width, height)",
@@ -843,7 +843,7 @@ const TRANSLATIONS = {
 
     // ブロックテキスト - 音楽
     "playNoteMessage": "音符 %1 を %2 拍子分再生",
-    "playMelodyMessage": "メロディー %1 を再生",
+    "playMelodyMessage": "メロディー %1 を再生\n後 %2 秒待機",
 
     // アクションオプション
     "stand": "立つ",

@@ -156,7 +156,18 @@ function createToolbox() {
                     { kind: "block", type: "get_analog_input" },
                     { kind: "block", type: "set_digital_output" },
                     { kind: "block", type: "set_analog_output" },
-                    { kind: "block", type: "send_custom_command" },
+                    { kind: "block", type: "send_custom_command",
+                        inputs: {
+                            COMMAND: {
+                                shadow: {
+                                    type: "text",
+                                    fields: {
+                                        TEXT: "m 0 60",
+                                    },
+                                },
+                            },
+                        } 
+                    },
                     { kind: "block", type: "gyro_control" },
                     { kind: "block", type: "getUltrasonicDistance" },
                     { kind: "block", type: "getCameraCoordinate" },
@@ -307,24 +318,6 @@ function blocklyGlobalConfig() {
             });
         }
     }
-
-    // Blockly.Blocks["variable_selector"] = {
-    //     init: function () {
-    //         this.jsonInit({
-    //             type: "variable_selector",
-    //             message0: getText("selectVariable"),
-    //             args0: [
-    //                 {
-    //                     type: "field_variable",
-    //                     name: "VAR",
-    //                     variable: Blockly.Msg.VARIABLES_DEFAULT_NAME,
-    //                 },
-    //             ],
-    //             output: "String",
-    //             tooltip: "",
-    //         });
-    //     },
-    // };
 
     // 超声波传感器距离(cm): Trigger [TRPIN] Echo [ECPIN]
     Blockly.Blocks["trackUltrasonicDistance"] = {
@@ -531,9 +524,15 @@ function blocklyGlobalConfig() {
                 message0: getText("sendCustomCommand"),
                 args0: [
                     {
-                        type: "field_input",
+                        type: "input_value",
                         name: "COMMAND",
-                        text: "",
+                        check: "String",
+                    },
+                    {
+                        type: "field_number",
+                        name: "DELAY",
+                        value: 1,
+                        min: 0,
                     },
                 ],
                 previousStatement: null,
@@ -693,8 +692,8 @@ function blocklyGlobalConfig() {
     };
 
     // 获取舵机角度积木
-    if (Blockly.Blocks["get_joint_angle"]) {
-        Blockly.Blocks["get_joint_angle"].init = function () {
+    Blockly.Blocks["get_joint_angle"] = {
+        init: function () {
             this.jsonInit({
                 type: "get_joint_angle",
                 message0: getText("getJointAngle"),
@@ -709,12 +708,12 @@ function blocklyGlobalConfig() {
                 colour: "#4361EE", // 动作积木：蓝色
                 tooltip: "",
             });
-        };
-    }
+        },
+    };
 
     // 获取所有舵机角度积木
-    if (Blockly.Blocks["get_all_joint_angles"]) {
-        Blockly.Blocks["get_all_joint_angles"].init = function () {
+    Blockly.Blocks["get_all_joint_angles"] = {
+        init: function () {
             this.jsonInit({
                 type: "get_all_joint_angles",
                 message0: getText("getAllJointAngles"),
@@ -722,8 +721,8 @@ function blocklyGlobalConfig() {
                 colour: "#4361EE", // 动作积木：蓝色
                 tooltip: "",
             });
-        };
-    }
+        },
+    };
 
     // 延时积木
     Blockly.Blocks["delay_ms"] = {
@@ -918,6 +917,12 @@ function blocklyGlobalConfig() {
                         name: "MELODY",
                         check: ["play_note"],
                     },
+                    {
+                        type: "field_number",
+                        name: "DELAY",
+                        value: 1,
+                        min: 0,
+                    }
                 ],
                 previousStatement: null,
                 nextStatement: null,

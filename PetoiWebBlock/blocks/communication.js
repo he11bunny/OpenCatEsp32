@@ -88,35 +88,27 @@ async function closeConnection() {
 // 全局异步客户端类定义
 // PetoiAsyncClient 类已移动到 petoi_async_client.js 文件中
 
-// 全局异步HTTP请求函数
-function httpRequest(cmd, timeout = 2000, needResponse = true)
-{
-  return webRequest(cmd, timeout, needResponse);
-}
-
 function webRequest(command, timeout = 30000, needResponse = true) {
   return new Promise(async (resolve, reject) =>
-  {
-    try
     {
-      // 使用全局的 WebSocket 客户端实例
-      if (!window.client) {
-        reject(new Error(getText("noConnectionEstablished")));
-        return;
+      try
+      {
+        // 使用全局的 WebSocket 客户端实例
+        if (!window.client) {
+          reject(new Error(getText("noConnectionEstablished")));
+          return;
+        }
+        let result = await window.client.sendCommand(command， timeout);
+        if (Array.isArray(result) && result.length == 1) {
+          result = result[0];
+        }
+        // 根据 needResponse 参数决定是否返回结果
+        resolve(needResponse ? result : true);
+      } catch (error) {
+        console.error(getText("httpRequestError"), error);
+        reject(error);
       }
-
-      let result = await window.client.sendCommand(command);
-      if (Array.isArray(result) && result.length == 1) {
-        result = result[0];
-      }
-      // 根据 needResponse 参数决定是否返回结果
-      resolve(needResponse ? result : true);
-    } catch (error)
-    {
-      console.error(getText("httpRequestError"), error);
-      reject(error);
-    }
-  });
+    });
 }
 
 function webBatchRequest(commands, timeout = 30000, needResponse = true)
@@ -129,7 +121,7 @@ function webBatchRequest(commands, timeout = 30000, needResponse = true)
         reject(new Error(getText("noConnectionEstablished")));
         return;
       }
-      const result = await window.client.sendCommand(commands);
+      const result = await window.client.sendCommand(commands, timeout);
       resolve(needResponse ? result : true);
     } catch (error)
     {
@@ -152,4 +144,8 @@ function addWebSocketEventListeners(eventName, callback)
        console.error(getText("messageProcessingError"), error);
      }
    });
+}
+
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }

@@ -101,7 +101,6 @@
   <script>
     // 自定义主题
     // 将函数设为全局可用
-    window.httpRequest = httpRequest;
     window.PetoiAsyncClient = PetoiAsyncClient;
 
     // 初始化变量
@@ -556,12 +555,13 @@
     function clearWorkspace() {
       workspace.clear();
       // 清空后自动添加默认连接积木
-      resetWorkspace();
+      addDefaultConnectionBlock();
+      updateUndoRedoState();
     }
 
     function resetWorkspace() {
       addDefaultConnectionBlock();
-      workspace.clearUndo();
+      // workspace.clearUndo();
       updateUndoRedoState();
     }
 
@@ -758,7 +758,7 @@
         "try {\n" +
         "  // 程序结束时自动发送休息指令'd'\n" +
         "  await asyncLog(getText('programEndingRestCommand'));\n" +
-        "  await httpRequest('d', 2000, true);\n" +
+        "  await webRequest('d', 2000, true);\n" +
         "  await closeConnection();\n" +
         "} catch(e) {\n" +
         "  console.error(getText('restCommandFailed') + e.message);\n" +
