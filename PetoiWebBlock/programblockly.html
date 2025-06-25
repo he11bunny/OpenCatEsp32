@@ -15,9 +15,6 @@
   <script src="./lang/translations.js"></script>
   <!-- 4. 然后加载自定义积木块文件 -->
   <script src="./blocks/communication.js"></script>
-  <script src="./blocks/control.js"></script>
-  <script src="./blocks/sensor.js"></script>
-  <script src="./blocks/motion.js"></script>
   <script src="./blocks/generators.js"></script>
   <!-- 5. 加载 WebSocket 客户端 -->
   <script src="./js/petoi_async_client.js"></script>
@@ -40,8 +37,8 @@
       <button onclick="runCode()" data-i18n="runCode">Run Code</button>
       <button onclick="saveWorkspace()" data-i18n="saveProgram">Save Program</button>
       <button onclick="document.getElementById('loadInput').click()" data-i18n="loadProgram">Load Program</button>
-      <button onclick="document.getElementById('skillFileInput').click()" data-i18n="uploadSkill">Upload Skill</button>
-      <input type="file" id="skillFileInput" accept=".md" onchange="handleSkillFileUpload(this.files[0])" style="display: none;">
+      <button onclick="triggerSkillFileUpload()" data-i18n="uploadSkills">Upload Skills</button>
+      <input type="file" id="skillFileInput" accept=".md" multiple onchange="handleSkillFilesUpload(this.files)" style="display: none;">
       <button onclick="clearWorkspace()" data-i18n="clearAll">Clear All</button>
       <input type="file" id="loadInput" accept=".json" onchange="loadWorkspace(this.files[0])">
       <span id="currentFileLabel" data-i18n="currentFileLabel" style="margin-left: 10px; color: #555;"></span>
@@ -108,6 +105,8 @@
 
     // 当前语言
     let isChangingLanguage = false;
+    // save entry block ids
+    let startBlockIds = [];
 
     // 新增翻译助手函数
     function getText(key) {
@@ -376,8 +375,7 @@
       function handleWorkspaceEvent(event) {
         // console.log('workspace event', event);
         // 当工作区被清空时，添加默认积木块
-        if (event.type === Blockly.Events.FINISHED_LOADING ||
-          (event.type === Blockly.Events.DELETE && workspace.getAllBlocks().length === 0)) {
+        if (event.type === Blockly.Events.FINISHED_LOADING) {
           resetWorkspace();
         }
 
@@ -528,8 +526,8 @@
 
     // 添加默认的connect with IP积木块
     function addDefaultConnectionBlock() {
-      // 只有当工作区为空时才添加默认积木
-      if (workspace.getAllBlocks().length === 0) {
+      // 只有当工作区不存在startBlockId时才添加默认积木
+      if (startBlockIds.length == 0) {
         // 创建make_connection积木块
         const connectionBlock = workspace.newBlock('make_connection');
         // 设置IP地址为当前设备IP
@@ -548,14 +546,21 @@
         gyroControlBlock.render();
         gyroControlBlock.moveBy(50, 50);
         connectionBlock.nextConnection.connect(gyroControlBlock.previousConnection);
+        connectionBlock.setDeletable(false);
+        gyroControlBlock.setDeletable(false);
+        workspace.clearUndo();
+        startBlockIds.push(connectionBlock.id);
+        startBlockIds.push(gyroControlBlock.id);
       }
     }
 
     // 添加清空工作区的函数
     function clearWorkspace() {
-      workspace.clear();
-      // 清空后自动添加默认连接积木
-      addDefaultConnectionBlock();
+      //delete all blocks except make_connection and gyro_control
+      const blocksToDelete = workspace.getAllBlocks().filter(block => !startBlockIds.includes(block.id));
+      blocksToDelete.forEach(block => {
+        block.dispose();
+      });
       updateUndoRedoState();
     }
 
@@ -921,9 +926,49 @@
     // 存储上传的技能文件
     window.uploadedSkills = [];
 
+    function triggerSkillFileUpload() {
+      const skillFileInput = document.getElementById('skillFileInput');
+      skillFileInput.value = null;
+      skillFileInput.click();
+    }
+
     // 处理技能文件上传
-    function handleSkillFileUpload(file) {
-      if (!file) return;
+    function handleSkillFilesUpload(files) {
+      if (!files || files.length === 0) return;
+
+      let successCount = 0;
+      let failCount = 0;
+      let processedCount = 0;
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        handleSkillFileUpload(file, (success) => {
+          if (success) {
+            successCount++;
+          } else {
+            failCount++;
+          }
+          processedCount++;
+
+          // 当所有文件都处理完成后，显示统计信息
+          if (processedCount === files.length) {
+            if (successCount > 0) {
+              console.info([getText("skillFilesUploaded").replace("{count}", successCount)]);
+            }
+            if (failCount > 0) {
+              console.error([getText("skillFilesUploadFailed").replace("{count}", failCount)]);
+            }
+          }
+        });
+      }
+    }
+
+    // 处理单个技能文件上传
+    function handleSkillFileUpload(file, callback) {
+      if (!file) {
+        if (callback) callback(false);
+        return;
+      }
 
       const reader = new FileReader();
       reader.onload = function(e) {
@@ -931,21 +976,27 @@
           // 解析技能文件内容
           const skillData = parseSkillFile(e.target.result);
           
-          // 存储解析后的数据
-          uploadedSkills.push({
-            name: file.name,
-            content: skillData,
-            timestamp: new Date().getTime()
-          });
+          // 存储解析后的数据,如果文件名已存在，则覆盖
+          const existingSkill = uploadedSkills.find(skill => skill.name === file.name);
+          if (existingSkill) {
+            existingSkill.content = skillData;
+          } else {
+            uploadedSkills.push({
+              name: file.name,
+              content: skillData
+            });
+          }
 
           // 更新文件列表显示
           updateSkillFilesList();
           
           // 显示成功消息
-          addConsoleMessage([getText("skillFileUploaded").replace("{filename}", file.name)]);
+          console.info([getText("skillFileUploaded").replace("{filename}", file.name)]);
+          
+          if (callback) callback(true);
         } catch (err) {
-          console.error('解析技能文件失败:', err);
-          addConsoleMessage([getText("skillFileUploadFailed")]);
+          console.error([getText("skillFilesUploadFailed").replace("{filename}", file.name)]);
+          if (callback) callback(false);
         }
       };
       reader.readAsText(file);
@@ -978,7 +1029,7 @@
       for (const line of dataLines) {
         // 跳过空行和注释
         if (!line || line.startsWith('#')) continue;
-        
+
         // 移除行首尾的大括号和空格
         const cleanLine = line.replace(/[{}]/g, '').trim();
         if (!cleanLine) continue;
@@ -1003,7 +1054,7 @@
     function updateSkillFilesList() {
       const container = document.getElementById('skillFilesContainer');
       const list = document.getElementById('skillFilesList');
-      
+
       if (uploadedSkills.length === 0) {
         container.style.display = 'none';
         return;
@@ -1067,7 +1118,7 @@
       reader.onload = function (e) {
         try {
           var saveData = JSON.parse(e.target.result);
-          
+
           // 加载工作区
           Blockly.serialization.workspaces.load(saveData, workspace);
 
@@ -1104,22 +1155,18 @@
         document.getElementById('loadInput').click();
       }
       // 添加撤销快捷键(Ctrl+Z)
-      if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === 'z') {
+      if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key === 'z') {
+        //prevent browser default behavior
         event.preventDefault();
-        // 使用undoStack_属性检查是否可以撤销
-        if (workspace.undoStack_ && workspace.undoStack_.length > 0) {
-          workspace.undo(false);
-          updateUndoRedoState();
-        }
       }
       // 添加重做快捷键(Ctrl+Y 或 Ctrl+Shift+Z)
       if ((event.ctrlKey || event.metaKey) &&
-        ((event.key.toLowerCase() === 'y') ||
-          (event.shiftKey && event.key.toLowerCase() === 'z'))) {
+        ((!event.shiftKey && event.key.toLowerCase() === 'y') ||
+          (event.shiftKey && event.key === 'z'))) {
         event.preventDefault();
         // 使用redoStack_属性检查是否可以重做
         if (workspace.redoStack_ && workspace.redoStack_.length > 0) {
-          workspace.redo(true);
+          workspace.undo(true);
           updateUndoRedoState();
         }
       }
@@ -1400,7 +1447,7 @@
         return;
       }
 
-      const command = `w % ${ssid}% ${password} \n`;
+      const command = `w%${ssid}%${password}\n`;
 
       try {
         await writer.write(new TextEncoder().encode(command));
@@ -1875,4 +1922,5 @@
 
   </script>
 </body>
+
 </html>

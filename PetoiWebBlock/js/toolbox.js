@@ -183,6 +183,9 @@ function createToolbox() {
                     { kind: "block", type: "acrobatic_moves" },
                     { kind: "block", type: "get_joint_angle" },
                     { kind: "block", type: "get_all_joint_angles" },
+                    { kind: "block", type: "joints_angle_frame_raw", fields: {
+                        VARIABLE: "0, 0, 0, 0, 0, 0, 0, 0, 30, 30, 30, 30, 30, 30, 30, 30",
+                    } },
                     { kind: "block", type: "set_joint_angle", inputs: {
                         VARIABLE: {
                             block: {
@@ -197,6 +200,16 @@ function createToolbox() {
                     //         },
                     //     },
                     // } },
+                    { kind: "block", type: "set_joints_angle_sim_raw", inputs: {
+                        VARIABLE: {
+                            block: {
+                                type: "joints_angle_frame_raw",
+                                fields: {
+                                    VARIABLE: "0, 0, 0, 0, 0, 0, 0, 0, 30, 30, 30, 30, 30, 30, 30, 30",
+                                },
+                            },
+                        },
+                    } },
                     { kind: "block", type: "set_joints_angle_sim", inputs: {
                         VARIABLE: {
                             block: {
@@ -625,6 +638,55 @@ function blocklyGlobalConfig() {
                 ],
                 previousStatement: null,
                 nextStatement: null,
+                colour: "#4361EE", // 控制台积木：紫色
+                tooltip: "",
+            });
+        },
+    };
+
+
+    // 关节角度积木
+    Blockly.Blocks["set_joints_angle_sim_raw"] = {
+        init: function () {
+            this.jsonInit({
+                type: "set_joints_angle_sim_raw",
+                message0: getText("setJointsAngleGroupSimRaw"),
+                args0: [
+                    {
+                        type: "input_value",
+                        name: "VARIABLE",
+                        check: "Array",
+                    },
+                    {
+                        type: "field_number",
+                        name: "DELAY",
+                        value: 0.2,
+                        min: 0,
+                        max: 10,
+                        step: 0.01
+                    },
+                ],
+                previousStatement: null,
+                nextStatement: null,
+                colour: "#4361EE", // 控制台积木：紫色
+                tooltip: "",
+            });
+        },
+    };
+
+    Blockly.Blocks["joints_angle_frame_raw"] = {
+        init: function () {
+            this.jsonInit({
+                type: "joints_angle_frame_raw",
+                message0: getText("jointsAngleFrameRaw"),
+                args0: [
+                    {
+                        type: "field_input",
+                        name: "VARIABLE",
+                        text: "",
+                    }
+                ],
+                output: "Array",
                 colour: "#4361EE", // 控制台积木：紫色
                 tooltip: "",
             });

@@ -130,39 +130,107 @@ Blockly.JavaScript.forBlock['play_melody'] = function (block) {
 
 javascript.javascriptGenerator.forBlock['set_joints_angle_seq'] = function (block)
 {
+  const token = "m";
   const variableText = Blockly.JavaScript.valueToCode(block, 'VARIABLE', Blockly.JavaScript.ORDER_ATOMIC);
-  let variable = eval(variableText);
-  // variable is array of [[jointId, angle], [jointId, angle], ...]
-  const params = variable.filter(item => item !== null && item.length == 2).flatMap(item => { return [item[0], item[1]] });
-  const delay = block.getFieldValue('DELAY');
-  const command = encodeCommand("m", params);
-  // const command = encodeCommand("M", params);
-  return `console.log(await webRequest("${command}", 2000, true));\n`;
+  const variable = eval(variableText).filter(item => item !== null);
+  if (variable.length == 0) {
+    return `console.log("set_joints_angle_sim: variable is empty");\n`;
+  } else {
+    let angleParams = [];
+    if (Array.isArray(variable[0])) {
+      // variable is array of [[jointId, angle], [jointId, angle], ...]
+      angleParams = variable.flat();
+    } else if (Number.isInteger(variable[0])) {
+      // variable is array of [jointId, angle, jointId, angle, ...]
+      angleParams = variable;
+    }
+    
+    const delay = block.getFieldValue('DELAY');
+    const delayMs = Math.ceil(delay * 1000);
+    const command = encodeCommand(token, angleParams);
+    let code = `console.log(await webRequest("${command}", 2000, true));\n`;
+    if (delayMs > 0) {
+        code += `await new Promise(resolve => setTimeout(resolve, ${delayMs}));\n`;
+    }
+    return code;
+  }
 };
 
 javascript.javascriptGenerator.forBlock['set_joints_angle_sim'] = function (block)
 {
+  const token = "i";
   const variableText = Blockly.JavaScript.valueToCode(block, 'VARIABLE', Blockly.JavaScript.ORDER_ATOMIC);
-  let variable = eval(variableText);
-  // variable is array of [[jointId, angle], [jointId, angle], ...]
-  //filter not null and item.length == 2
-  const params = variable.filter(item => item !== null && item.length == 2).flatMap(item => { return [item[0], item[1]] });
-  const delayMs = block.getFieldValue('DELAY');
-  const command = encodeCommand("i", params);
-  // const command = encodeCommand("I", params);
-  return `console.log(await webRequest("${command}", 2000, true));\n` +
-  `await new Promise(resolve => setTimeout(resolve, ${delayMs}));\n`;
+  const variable = eval(variableText).filter(item => item !== null);
+  if (variable.length == 0) {
+    return `console.log("set_joints_angle_sim: variable is empty");\n`;
+  } else {
+    let angleParams = [];
+    if (Array.isArray(variable[0])) {
+      // variable is array of [[jointId, angle], [jointId, angle], ...]
+      angleParams = variable.flat();
+    } else if (Number.isInteger(variable[0])) {
+      // variable is array of [jointId, angle, jointId, angle, ...]
+      angleParams = variable;
+    }
+    
+    const delay = block.getFieldValue('DELAY');
+    const delayMs = Math.ceil(delay * 1000);
+    const command = encodeCommand(token, angleParams);
+    let code = `console.log(await webRequest("${command}", 2000, true));\n`;
+    if (delayMs > 0) {
+        code += `await new Promise(resolve => setTimeout(resolve, ${delayMs}));\n`;
+    }
+    return code;
+  }
 };
+
+javascript.javascriptGenerator.forBlock['set_joints_angle_sim_raw'] = function (block)
+{
+  const token = "i";
+  const variableText = Blockly.JavaScript.valueToCode(block, 'VARIABLE', Blockly.JavaScript.ORDER_ATOMIC);
+  const variable = eval(variableText).filter(item => item !== null);
+  if (variable.length == 0) {
+    return `console.log("set_joints_angle_sim: variable is empty");\n`;
+  } else {
+    let angleParams = [];
+    if (Array.isArray(variable[0])) {
+      // variable is array of [[jointId, angle], [jointId, angle], ...]
+      angleParams = variable.flat();
+    } else if (Number.isInteger(variable[0])) {
+      // variable is array of [jointId, angle, jointId, angle, ...]
+      angleParams = variable;
+    }
+    
+    const delay = block.getFieldValue('DELAY');
+    const delayMs = Math.ceil(delay * 1000);
+    const command = encodeCommand(token, angleParams);
+    let code = `console.log(await webRequest("${command}", 2000, true));\n`;
+    if (delayMs > 0) {
+        code += `await new Promise(resolve => setTimeout(resolve, ${delayMs}));\n`;
+    }
+    return code;
+  }
+};
+
+javascript.javascriptGenerator.forBlock['joints_angle_frame_raw'] = function (block)
+{
+  const variable = block.getFieldValue('VARIABLE');
+  return [`[${variable}]`, Blockly.JavaScript.ORDER_ATOMIC];
+}
 
 // 代码生成:设置马达角度代码生成器
 javascript.javascriptGenerator.forBlock['set_joint_angle'] = function (block)
 {
   const variable = Blockly.JavaScript.valueToCode(block, 'VARIABLE', Blockly.JavaScript.ORDER_ATOMIC);
   const param = eval(variable);
-  const delayMs = block.getFieldValue('DELAY');
+  const delay = block.getFieldValue('DELAY');
+  const delayMs = Math.ceil(delay * 1000);
   const command = encodeCommand("m", param);
-  return `console.log(await webRequest("${command}", 2000, true));\n` +
-  `await new Promise(resolve => setTimeout(resolve, ${delayMs}));\n`;
+  let code = `console.log(await webRequest("${command}", 2000, true));\n`;
+  if (delayMs > 0) {
+    code += `await new Promise(resolve => setTimeout(resolve, ${delayMs}));\n`;
+  }
+  return code;
 };
 
 javascript.javascriptGenerator.forBlock['joint_absolute_angle_value'] = function (block)
@@ -210,10 +278,14 @@ await (async function() {
 //机械臂动作积木的代码生成器
 javascript.javascriptGenerator.forBlock['arm_action'] = function (block)
 {
-  const code = block.getFieldValue('COMMAND');
+  const cmd = block.getFieldValue('COMMAND');
   const delay = block.getFieldValue('DELAY');
-  const command = `${code}`;
-  return `console.log(await webRequest("${command}", 2000, true));\n`;
+  const delayMs = Math.round(delay * 1000);
+  const code = `console.log(await webRequest("${cmd}", 2000, true));\n`;
+  if (delayMs > 0) {
+    code += `await new Promise(resolve => setTimeout(resolve, ${delayMs}));\n`;
+  }
+  return code;
 };
 
 // 代码生成:执行技能文件
@@ -351,7 +423,7 @@ function encodeCommand(token, params) {
     return "b64:" + btoa(dataText);
   } else {
     if (params.length > 0) {
-      return `${token} ${params.join(' ')}`;
+      return `${token}${params.join(' ')}`;
     } else {
       return token;
     }

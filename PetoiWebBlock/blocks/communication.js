@@ -98,7 +98,7 @@ function webRequest(command, timeout = 30000, needResponse = true) {
           reject(new Error(getText("noConnectionEstablished")));
           return;
         }
-        let result = await window.client.sendCommand(command， timeout);
+        let result = await window.client.sendCommand(command, timeout);
         if (Array.isArray(result) && result.length == 1) {
           result = result[0];
         }

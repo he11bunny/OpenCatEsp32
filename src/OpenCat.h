@@ -724,11 +724,6 @@ void initRobot()
 #ifdef WEB_SERVER
   if (rebootForWifiManagerQ)
   {
-#ifdef I2C_EEPROM_ADDRESS
-    i2c_eeprom_write_byte(EEPROM_WIFI_MANAGER, false);
-#else
-    config.putBool("WifiManager", false);
-#endif
     startWifiManager();
     // Create a task to run webServer.handleClient() on core 1
     if (webServerConnected)
