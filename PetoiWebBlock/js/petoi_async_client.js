@@ -228,7 +228,7 @@ class PetoiAsyncClient
 
             const timeoutId = setTimeout(() => {
                 this.pendingTasks.delete(taskId);
-                reject(new Error(getText('commandTimeout')));
+                reject(new Error(getText('commandTimeout') + ' ' + taskId + ' ' + commands.join(' ')));
             }, timeout);
 
             this.pendingTasks.set(taskId, {
