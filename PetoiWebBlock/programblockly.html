@@ -60,6 +60,11 @@
           <div class="area-header">
             <span class="area-title" data-i18n="consoleLog">Console Log</span>
             <div class="button-group">
+              <label class="checkbox-container">
+                <input type="checkbox" id="showTimestampCheckbox" checked>
+                <span class="checkmark"></span>
+                <span data-i18n="showTimestamp">Show Timestamp</span>
+              </label>
               <button id="showSentCommandsBtn" onclick="toggleShowSentCommands()" class="toggle-button"
                 data-i18n="showSentCommands">Show Sent Commands</button>
               <button onclick="clearConsole()" class="clear-button" data-i18n="clearConsole">Clear Log</button>
@@ -277,6 +282,9 @@
         },
         trashcan: true
       });
+
+      // 监听工作区变化事件
+      workspace.addChangeListener(handleWorkspaceEvent);
     }
 
     // 切换语言
@@ -360,28 +368,7 @@
         document.getElementById('zhBtn').classList.toggle('active', false);
         document.getElementById('enBtn').classList.toggle('active', true);
         document.getElementById('jaBtn').classList.toggle('active', false);
-
-        // 监听工作区变化事件
-        workspace.addChangeListener(handleWorkspaceEvent);
       });
-
-      // 加载默认语言积木
-      loadLanguageFile('en', function () {
-        // 工作区已在DOMContentLoaded事件中初始化
-        // 翻译UI
-        updateUIText();
-      });
-
-      function handleWorkspaceEvent(event) {
-        // console.log('workspace event', event);
-        // 当工作区被清空时，添加默认积木块
-        if (event.type === Blockly.Events.FINISHED_LOADING) {
-          resetWorkspace();
-        }
-
-        // 更新撤销和重做按钮状态
-        updateUndoRedoState();
-      }
 
       // 添加控制台和串口输出区域的键盘复制功能
       function setupCopyKeyboardShortcuts() {
@@ -432,8 +419,30 @@
 
       // 初始化复制功能
       setupCopyKeyboardShortcuts();
+
+      // 添加时间戳复选框事件监听器
+      document.getElementById('showTimestampCheckbox').addEventListener('change', function() {
+        const showTimestamp = this.checked;
+        const consoleLog = document.getElementById('consoleLog');
+        
+        // 获取所有时间戳容器并切换显示状态
+        const timestampSpans = consoleLog.querySelectorAll('.timestamp');
+        timestampSpans.forEach(span => {
+          span.style.display = showTimestamp ? 'inline' : 'none';
+        });
+      });
     });
 
+    function handleWorkspaceEvent(event) {
+      // console.log('workspace event', event);
+      // 当工作区被清空时，添加默认积木块
+      if (event.type === Blockly.Events.FINISHED_LOADING) {
+        resetWorkspace();
+      }
+
+      // 更新撤销和重做按钮状态
+      updateUndoRedoState();
+    }
     // 添加动态加载语言文件的辅助函数
     function loadLanguageFile(lang, callback) {
       const script = document.createElement('script');
@@ -839,6 +848,7 @@
       // 创建工作区状态对象
       let workspaceState = Blockly.serialization.workspaces.save(workspace);
       workspaceState.skills = window.uploadedSkills;
+      workspaceState.startBlockIds = startBlockIds; // 保存startBlockIds
 
       const blob = new Blob([JSON.stringify(workspaceState, null, 2)], { type: 'application/json' });
 
@@ -1128,6 +1138,22 @@
             updateSkillFilesList();
           }
 
+          // 恢复startBlockIds
+          if (saveData.startBlockIds && Array.isArray(saveData.startBlockIds)) {
+            startBlockIds = saveData.startBlockIds;
+            // 验证保存的startBlockIds是否仍然存在于工作区中
+            const existingBlocks = startBlockIds.filter(id => workspace.getBlockById(id));
+            if (existingBlocks.length !== startBlockIds.length) {
+              // 如果有些块不存在了，重新初始化
+              startBlockIds = [];
+              addDefaultConnectionBlock();
+            }
+          } else {
+            // 如果没有保存的startBlockIds，重新初始化
+            startBlockIds = [];
+            addDefaultConnectionBlock();
+          }
+
           // 保存当前文件信息
           currentFile = file;
 
@@ -1174,6 +1200,7 @@
 
     function addConsoleMessage(args) {
       const logDiv = document.getElementById('consoleLog');
+      const showTimestamp = document.getElementById('showTimestampCheckbox').checked;
       const time = new Date().toLocaleTimeString();
 
       const messageDiv = document.createElement('div');
@@ -1192,7 +1219,21 @@
       });
 
       const messageText = messages.join(' ');
-      messageDiv.textContent = `[${time}] ${messageText} `;
+      
+      // 创建时间戳容器
+      const timestampSpan = document.createElement('span');
+      timestampSpan.className = 'timestamp';
+      timestampSpan.textContent = `[${time}] `;
+      timestampSpan.style.display = showTimestamp ? 'inline' : 'none';
+      
+      // 创建消息内容容器
+      const messageSpan = document.createElement('span');
+      messageSpan.className = 'message-content';
+      messageSpan.textContent = `${messageText} `;
+      
+      // 将两个容器添加到消息div中
+      messageDiv.appendChild(timestampSpan);
+      messageDiv.appendChild(messageSpan);
 
       // 检测是否为"任务结束"消息，如果是则使用绿色字体
       if (messageText === getText('taskEnded')) {
@@ -1261,6 +1302,7 @@
     let ipCheckTimer = null;
     let lastPartialIP = null;
     let serialBuffer = '';
+    let consoleBuffer = ''; // 添加单独的console缓冲区
 
     async function openSerialPort() {
       try {
@@ -1478,6 +1520,25 @@
           }
           const text = new TextDecoder().decode(value);
           serialBuffer += text;
+          consoleBuffer += text; // 同时添加到console缓冲区
+
+          // 监听特定格式的输出：类似 "=\n4894\nR\n" 的格式
+          // 检查是否包含 "=\n" 开头和 "\nR\n" 结尾的模式
+          const patternMatch = consoleBuffer.match(/=\n([^\n]+)\n[a-zA-Z]{1}\n/);
+          if (patternMatch) {
+            // 提取第二行内容（第一行是"="，第二行是数字，第三行是"R"）
+            const secondLine = patternMatch[1];
+            addConsoleMessage(secondLine);
+            
+            // 从console缓冲区中移除已处理的内容
+            const matchEnd = consoleBuffer.indexOf(patternMatch[0]) + patternMatch[0].length;
+            consoleBuffer = consoleBuffer.substring(matchEnd);
+          }
+
+          // 如果console缓冲区过大，防止内存泄漏
+          if (consoleBuffer.length > 10000) {
+            consoleBuffer = consoleBuffer.substring(consoleBuffer.length - 5000);
+          }
 
           // 取消任何正在进行的IP检查定时器
           if (ipCheckTimer) {

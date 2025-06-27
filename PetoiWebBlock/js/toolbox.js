@@ -193,13 +193,13 @@ function createToolbox() {
                             },
                         },
                     } },
-                    // { kind: "block", type: "set_joint_angle", inputs: {
-                    //     VARIABLE: {
-                    //         block: {
-                    //             type: "joint_relative_angle_value",
-                    //         },
-                    //     },
-                    // } },
+                    { kind: "block", type: "set_joint_angle", inputs: {
+                        VARIABLE: {
+                            block: {
+                                type: "joint_relative_angle_value",
+                            },
+                        },
+                    } },
                     { kind: "block", type: "set_joints_angle_sim_raw", inputs: {
                         VARIABLE: {
                             block: {
@@ -225,7 +225,7 @@ function createToolbox() {
                         },
                     } },
                     { kind: "block", type: "joint_absolute_angle_value" },
-                    // { kind: "block", type: "joint_relative_angle_value" },
+                    { kind: "block", type: "joint_relative_angle_value" },
                     { kind: "block", type: "arm_action" },
                     { kind: "block", type: "action_skill_file" },
                 ],

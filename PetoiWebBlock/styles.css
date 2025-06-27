@@ -144,6 +144,17 @@ body {
     color: #ffffff;
 }
 
+/* 时间戳容器样式 */
+.console-item .timestamp {
+    color: #888;
+    font-weight: normal;
+}
+
+/* 消息内容容器样式 */
+.console-item .message-content {
+    color: inherit;
+}
+
 /* 串口输出区域 */
 .serial-output {
     flex: 1;
@@ -657,3 +668,66 @@ body {
         /* 移除最大宽度限制 */
     }
 }
+
+/* 复选框容器样式 */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 12px;
+    color: #fff;
+    margin-right: 10px;
+    user-select: none;
+    background-color: #007bff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #0056b3;
+}
+
+.checkbox-container input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 20px;
+    height: 14px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 2px;
+    margin-right: 5px;
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.checkbox-container input[type="checkbox"]:checked + .checkmark:after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 4px;
+    height: 8px;
+    border: solid #007bff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.checkbox-container:hover {
+    background-color: #0056b3;
+    border-color: #004085;
+}
+
+.checkbox-container:hover .checkmark {
+    border-color: #007bff;
+}
+
+.checkbox-container input[type="checkbox"]:checked + .checkmark {
+    background-color: #fff;
+    border-color: #007bff;
+}
+
+.checkbox-container input[type="checkbox"]:checked + .checkmark:after {
+    border-color: #007bff;
+}
+
+/* 控制台内容项样式 */
