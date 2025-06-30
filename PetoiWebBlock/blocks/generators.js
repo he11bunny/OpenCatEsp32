@@ -591,7 +591,6 @@ function generateMoveCode(block_type, token, params, delay) {
         return `console.log("${block_type}: params is empty");\n`;
     } else {
         let code = "";
-        let angleParams = [];
         const paramText = `[${params
             .map((item) => `[${item.join(",")}]`)
             .join(",")}]`;
@@ -627,6 +626,7 @@ await (async function() {
 `;
             }
         } else {
+            const angleParams = params.flat();
             const command = encodeCommand(token, angleParams);
             code += `await webRequest("${command}", 5000, true);`;
         }
