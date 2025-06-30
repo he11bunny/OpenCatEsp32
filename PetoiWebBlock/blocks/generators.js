@@ -600,7 +600,7 @@ function generateMoveCode(block_type, token, params, delay) {
                 code += `
 await (async function() {
   const joints = await (async function() {
-    const rawResult = await webRequest("j", 5000, true);
+    const rawResult = await webRequest("j", ${COMMAND_TIMEOUT_MAX}, true);
     const result = parseAllJointsResult(rawResult);
     return result;
   })()
@@ -614,7 +614,7 @@ await (async function() {
                 code += `
 await (async function() {
   const joints = await (async function() {
-    const rawResult = await webRequest("j", 5000, true);
+    const rawResult = await webRequest("j", ${COMMAND_TIMEOUT_MAX}, true);
     const result = parseAllJointsResult(rawResult);
     return result;
   })()
@@ -628,7 +628,7 @@ await (async function() {
         } else {
             const angleParams = params.flat();
             const command = encodeCommand(token, angleParams);
-            code += `await webRequest("${command}", 5000, true);`;
+            code += `await webRequest("${command}", ${COMMAND_TIMEOUT_MAX}, true);\n`;
         }
         const delayMs = Math.ceil(delay * 1000);
         if (delayMs > 0) {

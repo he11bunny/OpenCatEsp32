@@ -344,6 +344,7 @@ void completeWebTask()
 
     // 发送完成状态给客户端
     JsonDocument completeDoc;
+    completeDoc["type"] = "response";
     completeDoc["taskId"] = currentWebTaskId;
     completeDoc["status"] = "completed";
     JsonArray results = completeDoc["results"].to<JsonArray>();
