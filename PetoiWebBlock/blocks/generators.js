@@ -143,36 +143,19 @@ javascript.javascriptGenerator.forBlock["set_joints_angle_seq"] = function (
         "VARIABLE",
         Blockly.JavaScript.ORDER_ATOMIC
     );
-    const variable = eval(variableText).filter((item) => item !== null);
     const delay = block.getFieldValue("DELAY");
-    if (variable.length == 0) {
-        return `console.log("set_joints_angle_seq: variable is empty");\n`;
-    } else {
-        if (Number.isInteger(variable[0])) {
-            // variable is array of [jointId, angle, jointId, angle, ...]
-            let angleParams = variable;
-            const delayMs = Math.ceil(delay * 1000);
-            const command = encodeCommand(token, angleParams);
-            let code = `console.log(await webRequest("${command}", ${COMMAND_TIMEOUT_MAX}, true));\n`;
-            if (delayMs > 0) {
-                code += `await new Promise(resolve => setTimeout(resolve, ${delayMs}));\n`;
-            }
-            return code;
-        } else if (
-            Array.isArray(variable[0]) &&
-            Number.isInteger(variable[0][0])
-        ) {
-            const code = generateMoveCode(
-                "set_joints_angle_seq",
-                token,
-                variable,
-                delay
-            );
-            return code;
-        } else {
-            return `console.log("set_joints_angle_seq: variable is invalid");\n`;
-        }
+    let code = `
+await (async function() {
+  const command = await encodeMoveCommand("${token}", ${variableText});
+  await webRequest(command, ${COMMAND_TIMEOUT_MAX}, true);
+  return true;
+})()
+`
+    const delayMs = Math.ceil(delay * 1000);
+    if (delayMs > 0) {
+        code += `await new Promise(resolve => setTimeout(resolve, ${delayMs}));\n`;
     }
+    return code;
 };
 
 javascript.javascriptGenerator.forBlock["set_joints_angle_sim"] = function (
@@ -185,35 +168,18 @@ javascript.javascriptGenerator.forBlock["set_joints_angle_sim"] = function (
         "VARIABLE",
         Blockly.JavaScript.ORDER_ATOMIC
     );
-    const variable = eval(variableText).filter((item) => item !== null);
-    if (variable.length == 0) {
-        return `console.log("set_joints_angle_sim: variable is empty");\n`;
-    } else {
-        if (Number.isInteger(variable[0])) {
-            // variable is array of [jointId, angle, jointId, angle, ...]
-            let angleParams = variable;
-            const delayMs = Math.ceil(delay * 1000);
-            const command = encodeCommand(token, angleParams);
-            let code = `console.log(await webRequest("${command}", ${COMMAND_TIMEOUT_MAX}, true));\n`;
-            if (delayMs > 0) {
-                code += `await new Promise(resolve => setTimeout(resolve, ${delayMs}));\n`;
-            }
-            return code;
-        } else if (
-            Array.isArray(variable[0]) &&
-            Number.isInteger(variable[0][0])
-        ) {
-            const code = generateMoveCode(
-                "set_joints_angle_sim",
-                token,
-                variable,
-                delay
-            );
-            return code;
-        } else {
-            return `console.log("set_joints_angle_sim: variable is invalid");\n`;
-        }
+    let code = `
+await (async function() {
+  const command = await encodeMoveCommand("${token}", ${variableText});
+  await webRequest(command, ${COMMAND_TIMEOUT_MAX}, true);
+  return true;
+})()
+`
+    const delayMs = Math.ceil(delay * 1000);
+    if (delayMs > 0) {
+        code += `await new Promise(resolve => setTimeout(resolve, ${delayMs}));\n`;
     }
+    return code;
 };
 
 javascript.javascriptGenerator.forBlock["set_joints_angle_sim_raw"] = function (
@@ -258,33 +224,25 @@ javascript.javascriptGenerator.forBlock["joints_angle_frame_raw"] = function (
 
 // 代码生成:设置马达角度代码生成器
 javascript.javascriptGenerator.forBlock["set_joint_angle"] = function (block) {
-    const delay = block.getFieldValue("DELAY");
-    const delayMs = Math.ceil(delay * 1000);
-    const variable = Blockly.JavaScript.valueToCode(
+    const variableText = Blockly.JavaScript.valueToCode(
         block,
         "VARIABLE",
         Blockly.JavaScript.ORDER_ATOMIC
     );
-    const param = eval(variable);
-    if (param.length == 2) {
-        const command = encodeCommand("m", param);
-        let code = `console.log(await webRequest("${command}", 10000, true));\n`;
-        if (delayMs > 0) {
-            code += `await new Promise(resolve => setTimeout(resolve, ${delayMs}));\n`;
-        }
-        return code;
-    } else if (param.length == 3) {
-        let code = generateMoveCode(
-            "set_joints_angle_sim",
-            "m",
-            [param],
-            delay
-        );
-        return code;
-    } else {
-        const code = generateMoveCode("set_joint_angle", "m", param, delay);
-        return code;
+    const token = "m";
+    let code = `
+await (async function() {
+  const command = await encodeMoveCommand("${token}", ${variableText});
+  await webRequest(command, ${COMMAND_TIMEOUT_MAX}, true);
+  return true;
+})()
+`
+    const delay = block.getFieldValue("DELAY");
+    const delayMs = Math.ceil(delay * 1000);
+    if (delayMs > 0) {
+        code += `await new Promise(resolve => setTimeout(resolve, ${delayMs}));\n`;
     }
+    return code;
 };
 
 javascript.javascriptGenerator.forBlock["joint_absolute_angle_value"] =
@@ -295,10 +253,7 @@ javascript.javascriptGenerator.forBlock["joint_absolute_angle_value"] =
             "ANGLE",
             Blockly.JavaScript.ORDER_ATOMIC
         );
-        let angleValue = eval(angle);
-        // angle limit in [-125, 125]
-        angleValue = Math.max(-125, Math.min(125, angleValue));
-        return [`[${jointId}, ${angleValue}]`, Blockly.JavaScript.ORDER_ATOMIC];
+        return [`[${jointId}, ${angle}]`, Blockly.JavaScript.ORDER_ATOMIC];
     };
 
 
@@ -311,11 +266,8 @@ javascript.javascriptGenerator.forBlock["joint_relative_angle_value"] =
             "ANGLE",
             Blockly.JavaScript.ORDER_ATOMIC
         );
-        let angleValue = eval(angle)    ;
-        // angle limit in [0, 125]
-        angleValue = Math.max(0, Math.min(125, angleValue));
         return [
-            `[${jointId}, ${angleSign}, ${angleValue}]`,
+            `[${jointId}, ${angleSign}, ${angle}]`,
             Blockly.JavaScript.ORDER_ATOMIC,
         ];
     };
@@ -599,61 +551,9 @@ function delay(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function generateMoveCode(block_type, token, params, delay) {
-    if (params.length == 0) {
-        return `console.log("${block_type}: params is empty");\n`;
-    } else {
-        let code = "";
-        const paramText = `[${params
-            .map((item) => `[${item.join(",")}]`)
-            .join(",")}]`;
-        const hasRelative = params.some((item) => item.length == 3);
-        if (hasRelative) {
-            if (block_type == "set_joints_angle_sim") {
-                code += `
-await (async function() {
-  const joints = await (async function() {
-    const rawResult = await webRequest("j", ${COMMAND_TIMEOUT_MAX}, true);
-    const result = parseAllJointsResult(rawResult);
-    return result;
-  })()
-  const cmdArgs = generateRelativeMoveSimCode(joints, ${paramText});
-  const command = encodeCommand("${token}", cmdArgs);
-  await webRequest(command, 5000, true);
-  return true;
-})()
-`;
-            } else if (block_type == "set_joints_angle_seq") {
-                code += `
-await (async function() {
-  const joints = await (async function() {
-    const rawResult = await webRequest("j", ${COMMAND_TIMEOUT_MAX}, true);
-    const result = parseAllJointsResult(rawResult);
-    return result;
-  })()
-  const cmdArgs = generateRelativeMoveSeqCode(joints, ${paramText});
-  const command = encodeCommand("${token}", cmdArgs);
-  await webRequest(command, 5000, true);
-  return true;
-})()
-`;
-            }
-        } else {
-            const angleParams = params.flat();
-            const command = encodeCommand(token, angleParams);
-            code += `await webRequest("${command}", ${COMMAND_TIMEOUT_MAX}, true);\n`;
-        }
-        const delayMs = Math.ceil(delay * 1000);
-        if (delayMs > 0) {
-            code += `await new Promise(resolve => setTimeout(resolve, ${delayMs}));\n`;
-        }
-        return code;
-    }
-}
-
 function generateRelativeMoveSimCode(joints, params) {
     let status = Array.from(joints);
-    let angleParams = [];
+    let joinIndexs = new Set();
     for (let i = 0; i < params.length; i++) {
         const args = params[i];
         if (args.length == 3) {
@@ -662,39 +562,68 @@ function generateRelativeMoveSimCode(joints, params) {
             const angle = args[2];
             const updatedAngle = status[jointId] + angleSign * angle;
             status[jointId] = Math.max(Math.min(updatedAngle, 125), -125);
+            joinIndexs.add(jointId);
         } else if (args.length == 2) {
             const jointId = args[0];
             const angle = args[1];
             status[jointId] = angle;
+            joinIndexs.add(jointId);
         }
     }
     // map array [angle0, angle1, ...] to [index0, angle0, index1, angle1, ...]
     let result = [];
-    for (let i = 0; i < status.length; i++) {
-        result.push(i, status[i]);
-    }
+    joinIndexs.forEach((index) => {
+        result.push(index, status[index]);
+    });
     return result;
 }
 
 function generateRelativeMoveSeqCode(joints, params) {
     let status = Array.from(joints);
     let angleParams = [];
-    for (let i = 0; i < params.length; i++) {
-        const args = params[i];
+    params.forEach((args) => {
+        const jointId = args[0];
         if (args.length == 3) {
-            const jointId = args[0];
             const angleSign = args[1];
             const angle = args[2];
             const updatedAngle = status[jointId] + angleSign * angle;
             status[jointId] = Math.max(Math.min(updatedAngle, 125), -125);
         } else if (args.length == 2) {
-            const jointId = args[0];
             const angle = args[1];
             status[jointId] = angle;
         }
-        angleParams.push(i, status[i]);
-    }
+        angleParams.push(jointId, status[jointId]);
+    });
     return angleParams;
+}
+
+async function encodeMoveCommand(token, params) {
+    if (Array.isArray(params) && params.length > 0) {
+        let joints = Array(16).fill(0);
+        let jointArgs = params.filter((item) => item !== null);
+        if (Number.isInteger(jointArgs[0])) {
+            jointArgs = [jointArgs];
+        } else {
+            const hasRelative = params.some((item) => item.length == 3);
+            if (hasRelative) {
+                const rawResult = await webRequest("j", COMMAND_TIMEOUT_MAX, true);
+                const result = parseAllJointsResult(rawResult);
+                joints = result;
+            }
+        }
+        let command = "";
+        // m: move seq
+        if (token.toLowerCase() == "m") {
+            const cmdArgs = generateRelativeMoveSeqCode(joints, jointArgs);
+            command = encodeCommand(token, cmdArgs);
+        } else {
+            const cmdArgs = generateRelativeMoveSimCode(joints, jointArgs);
+            command = encodeCommand(token, cmdArgs);
+        }
+        return command;
+    } else {
+        return token;
+    }
 }
 
 // HTTP请求函数，用于在生成的代码中使用 - 仅供模拟测试
