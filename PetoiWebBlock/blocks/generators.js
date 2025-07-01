@@ -326,7 +326,7 @@ await (async function() {
   const rawResult = await webRequest("${command}", 5000, true);
   const result = parseAllJointsResult(rawResult);
   return result;
-})();
+})()
 `;
     return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
 };
@@ -566,7 +566,6 @@ function parseCameraCoordinateResult(rawResult) {
 
 // rawResult is string like "0\t1\t2\t3\t4\t5\t6\t7\t8\t9\t10\t11\t12\t13\t14\t15\t\n0,\t0,\t0,\t0,\t0,\t0,\t0,\t0,\t30,\t30,\t30,\t30,\t30,\t30,\t30,\t30,\t\nj\n"
 function parseAllJointsResult(rawResult) {
-    console.log("parseAllJointsResult: ", rawResult);
     const lines = rawResult.split("\n");
     if (lines.length >= 3 && lines[2].includes("j")) {
         const indexs = lines[0]
