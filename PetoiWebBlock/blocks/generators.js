@@ -290,18 +290,32 @@ javascript.javascriptGenerator.forBlock["set_joint_angle"] = function (block) {
 javascript.javascriptGenerator.forBlock["joint_absolute_angle_value"] =
     function (block) {
         const jointId = block.getFieldValue("JOINT");
-        const angle = block.getFieldValue("ANGLE");
-        return [`[${jointId}, ${angle}]`, Blockly.JavaScript.ORDER_ATOMIC];
+        const angle = Blockly.JavaScript.valueToCode(
+            block,
+            "ANGLE",
+            Blockly.JavaScript.ORDER_ATOMIC
+        );
+        let angleValue = eval(angle);
+        // angle limit in [-125, 125]
+        angleValue = Math.max(-125, Math.min(125, angleValue));
+        return [`[${jointId}, ${angleValue}]`, Blockly.JavaScript.ORDER_ATOMIC];
     };
 
-//TODO: 负数
+
 javascript.javascriptGenerator.forBlock["joint_relative_angle_value"] =
     function (block) {
         const jointId = block.getFieldValue("JOINT");
         const angleSign = block.getFieldValue("ANGLE_SIGN");
-        const angle = block.getFieldValue("ANGLE");
+        const angle = Blockly.JavaScript.valueToCode(
+            block,
+            "ANGLE",
+            Blockly.JavaScript.ORDER_ATOMIC
+        );
+        let angleValue = eval(angle)    ;
+        // angle limit in [0, 125]
+        angleValue = Math.max(0, Math.min(125, angleValue));
         return [
-            `[${jointId}, ${angleSign}, ${angle}]`,
+            `[${jointId}, ${angleSign}, ${angleValue}]`,
             Blockly.JavaScript.ORDER_ATOMIC,
         ];
     };

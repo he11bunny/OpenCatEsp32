@@ -190,6 +190,13 @@ function createToolbox() {
                         VARIABLE: {
                             block: {
                                 type: "joint_absolute_angle_value",
+                                inputs: {
+                                    ANGLE: {
+                                        shadow: {
+                                            type: "math_number",
+                                        },
+                                    },
+                                },
                             },
                         },
                     } },
@@ -197,6 +204,13 @@ function createToolbox() {
                         VARIABLE: {
                             block: {
                                 type: "joint_relative_angle_value",
+                                inputs: {
+                                    ANGLE: {
+                                        shadow: {
+                                            type: "math_number",
+                                        },
+                                    },
+                                },
                             },
                         },
                     } },
@@ -224,8 +238,25 @@ function createToolbox() {
                             },
                         },
                     } },
-                    { kind: "block", type: "joint_absolute_angle_value" },
-                    { kind: "block", type: "joint_relative_angle_value" },
+                    { kind: "block", type: "joint_absolute_angle_value", 
+                        inputs: {
+                            ANGLE: {
+                                shadow: {
+                                    type: "math_number"
+                                },
+                            },
+                        } 
+                    },
+                    { kind: "block", 
+                        type: "joint_relative_angle_value", 
+                        inputs: {
+                            ANGLE: {
+                                shadow: {
+                                    type: "math_number"
+                                },
+                            },
+                        } 
+                    },
                     { kind: "block", type: "arm_action" },
                     { kind: "block", type: "action_skill_file" },
                 ],
@@ -706,11 +737,9 @@ function blocklyGlobalConfig() {
                         options: jointOptions,
                     },
                     {
-                        type: "field_number",
+                        type: "input_value",
                         name: "ANGLE",
-                        value: 0,
-                        min: -125,
-                        max: 125,
+                        check: "Number",
                     },
                 ],
                 output: "Array",
@@ -740,11 +769,9 @@ function blocklyGlobalConfig() {
                         ],
                     },
                     {
-                        type: "field_number",
+                        type: "input_value",
                         name: "ANGLE",
-                        value: 0,
-                        min: 0,
-                        max: 125,
+                        check: "Number",
                     },
                 ],
                 output: "Array",

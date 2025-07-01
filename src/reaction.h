@@ -444,8 +444,7 @@ void reaction()
           webServerConnected = connectWifi(ssid, password);
           if (webServerConnected)
           {
-            PTLF("Successfully connected to Wifi:");
-            PTL(WiFi.localIP());
+            PTHL("Successfully connected Wifi to IP Address: ", WiFi.localIP());
             PTLF("Web server will be started via startWifiManager");
 #ifdef I2C_EEPROM_ADDRESS
             i2c_eeprom_write_byte(EEPROM_WIFI_MANAGER, true);
