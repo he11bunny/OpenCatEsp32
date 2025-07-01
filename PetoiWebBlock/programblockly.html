@@ -1132,12 +1132,6 @@
           // 加载工作区
           Blockly.serialization.workspaces.load(saveData, workspace);
 
-          // 加载技能文件
-          if (saveData.skills && Array.isArray(saveData.skills)) {
-            window.uploadedSkills = saveData.skills;
-            updateSkillFilesList();
-          }
-
           // 恢复startBlockIds
           if (saveData.startBlockIds && Array.isArray(saveData.startBlockIds)) {
             startBlockIds = saveData.startBlockIds;
@@ -1152,6 +1146,12 @@
             // 如果没有保存的startBlockIds，重新初始化
             startBlockIds = [];
             addDefaultConnectionBlock();
+          }
+
+          // 加载技能文件
+          if (saveData.skills && Array.isArray(saveData.skills)) {
+            window.uploadedSkills = saveData.skills;
+            updateSkillFilesList();
           }
 
           // 保存当前文件信息
