@@ -29,6 +29,11 @@ function getDeviceModel()
 // 连接机器人函数实现 - WebSocket版本
 async function makeConnection(ip, timeout = 2000) {
   try {
+    if (window.client) {
+      // 如果已经有连接，先断开
+      window.client.disconnect();
+      window.client = null; // 清除全局客户端实例
+    }
     // 创建WebSocket客户端
     const client = new PetoiAsyncClient(`ws://${ip}:81`);
     // window.client = client;

@@ -768,23 +768,30 @@
       code = code.replace(/console\.log\((.*?)\);/g, 'await asyncLog($1);');
 
       // 包装整个代码到一个异步函数中
-      code = asyncHelper + "\n(async function() {\n" + code + "\n" +
-        "try {\n" +
-        "  // 程序结束时自动发送休息指令'd'\n" +
-        "  await asyncLog(getText('programEndingRestCommand'));\n" +
-        "  await webRequest('d', 2000, true);\n" +
-        "  await closeConnection();\n" +
-        "} catch(e) {\n" +
-        "  console.error(getText('restCommandFailed') + e.message);\n" +
-        "}\n" +
-        "console.log(getText('taskEnded'));" +
-        "\n})().catch(e => { console.error(getText('networkRequestError') + ': ' + e.message); alert(getText('networkRequestError') + ': ' + e.message); });";
+      const runCodeBlock = `
+(async function () {
 
+${code}
+
+  try {
+    // 程序结束时自动发送休息指令'd'
+    await asyncLog(getText("programEndingRestCommand"));
+    await webRequest("d", 5000, true);
+  } catch (e) {
+    console.error(getText("restCommandFailed") + e.message);
+  }
+  await closeConnection();
+  console.log(getText("taskEnded"));
+})().catch((e) => {
+  console.error(getText("networkRequestError") + ": " + e.message);
+  alert(getText("networkRequestError") + ": " + e.message);
+});
+`
       try {
-        eval(code);
+        eval(runCodeBlock);
       } catch (e) {
         console.info("code:");
-        console.info(code);
+        console.info(runCodeBlock);
         console.error(getText("networkRequestError") + ": " + e.message);
         alert(getText("networkRequestError") + ": " + e.message);
       }

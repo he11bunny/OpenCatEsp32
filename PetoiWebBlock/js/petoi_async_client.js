@@ -22,6 +22,7 @@ class PetoiAsyncClient
         this.heartbeatTimeoutMs = 15000;  // 15秒没有响应就重连
         this.lastHeartbeatTime = 0;       // 记录最后一次心跳时间
         this.eventTarget = new EventTarget();
+        this.clientId = Date.now().toString(); // 唯一客户端ID
     }
 
     /**
@@ -40,7 +41,7 @@ class PetoiAsyncClient
                 // 设置心跳超时
                 this.heartbeatTimeout = setTimeout(() => {
                     console.log(getText('heartbeatTimeout'));
-                    this.ws.close();
+                    this.disconnect();
                 }, this.heartbeatTimeoutMs);
             }
         }, this.heartbeatIntervalMs);
@@ -149,9 +150,6 @@ class PetoiAsyncClient
                 const now = Date.now();
                 const latency = now - this.lastHeartbeatTime;
                 console.log(getText('heartbeatResponse').replace('{latency}', latency));
-                //mock event
-                this.eventTarget.dispatchEvent(new CustomEvent('event_us', { detail: { distance: 150 } }));
-                this.eventTarget.dispatchEvent(new CustomEvent('event_cam', { detail: { x: -20.5, y: 15.0, width: 50, height: 50 } }));
                 if (this.heartbeatTimeout) {
                     clearTimeout(this.heartbeatTimeout);
                     this.heartbeatTimeout = null;
