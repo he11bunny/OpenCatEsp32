@@ -754,21 +754,18 @@
       tempWorkspace.dispose();
       Blockly.JavaScript.INFINITE_LOOP_TRAP = null;
 
-      // 注入WebSocket客户端和辅助函数
-      const asyncHelper = `
-        function asyncLog(message) {
-          return new Promise((resolve) => {
-            console.log(message);
-            setTimeout(resolve, 0);
-          });
-        }
-      `;
-
       // 替换所有 console.log 为 asyncLog
       code = code.replace(/console\.log\((.*?)\);/g, 'await asyncLog($1);');
 
       // 包装整个代码到一个异步函数中
       const runCodeBlock = `
+function asyncLog(message) {
+  return new Promise((resolve) => {
+    console.log(message);
+    setTimeout(resolve, 0);
+  });
+}
+
 (async function () {
 
 ${code}
