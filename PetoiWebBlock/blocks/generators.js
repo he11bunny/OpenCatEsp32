@@ -603,13 +603,12 @@ async function encodeMoveCommand(token, params) {
         let jointArgs = params.filter((item) => item !== null);
         if (Number.isInteger(jointArgs[0])) {
             jointArgs = [jointArgs];
-        } else {
-            const hasRelative = params.some((item) => item.length == 3);
-            if (hasRelative) {
-                const rawResult = await webRequest("j", COMMAND_TIMEOUT_MAX, true);
-                const result = parseAllJointsResult(rawResult);
-                joints = result;
-            }
+        }
+        const hasRelative = jointArgs.some((item) => item.length == 3);
+        if (hasRelative) {
+            const rawResult = await webRequest("j", COMMAND_TIMEOUT_MAX, true);
+            const result = parseAllJointsResult(rawResult);
+            joints = result;
         }
         let command = "";
         // m: move seq
