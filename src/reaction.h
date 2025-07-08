@@ -445,16 +445,18 @@ void reaction()
           if (webServerConnected)
           {
             PTHL("Successfully connected Wifi to IP Address: ", WiFi.localIP());
-            PTLF("Web server will be started via startWifiManager");
 #ifdef I2C_EEPROM_ADDRESS
             i2c_eeprom_write_byte(EEPROM_WIFI_MANAGER, true);
 #else
             config.putBool("WifiManager", true);
 #endif
+            PTLF("Rebooting to use web server.");
+            delay(3000);
+            ESP.restart();
           }
           else
           {
-            Serial.println("Timeout: Fail to connect web server!");
+            Serial.println("Timeout: Fail to connect Wifi!");
           }
         }
       }
