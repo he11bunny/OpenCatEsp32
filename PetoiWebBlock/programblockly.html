@@ -568,7 +568,10 @@
       //delete all blocks except make_connection and gyro_control
       const blocksToDelete = workspace.getAllBlocks().filter(block => !startBlockIds.includes(block.id));
       blocksToDelete.forEach(block => {
-        block.dispose();
+        try {
+          block.dispose();
+        } catch (e) {
+        }
       });
       updateUndoRedoState();
     }
