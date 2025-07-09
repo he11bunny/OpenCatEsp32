@@ -151,11 +151,12 @@ function createToolbox() {
                 name: getText("categoryCommunication"),
                 categorystyle: "communication_category",
                 contents: [
-                    { kind: "block", type: "make_connection" },
                     { kind: "block", type: "get_digital_input" },
                     { kind: "block", type: "get_analog_input" },
                     { kind: "block", type: "set_digital_output" },
                     { kind: "block", type: "set_analog_output" },
+                    { kind: "block", type: "getUltrasonicDistance" },
+                    { kind: "block", type: "getCameraCoordinate" },
                     { kind: "block", type: "send_custom_command",
                         inputs: {
                             COMMAND: {
@@ -169,8 +170,6 @@ function createToolbox() {
                         } 
                     },
                     { kind: "block", type: "gyro_control" },
-                    { kind: "block", type: "getUltrasonicDistance" },
-                    { kind: "block", type: "getCameraCoordinate" },
                 ],
             },
             {
@@ -181,11 +180,9 @@ function createToolbox() {
                     { kind: "block", type: "gait" },
                     { kind: "block", type: "posture" },
                     { kind: "block", type: "acrobatic_moves" },
+                    { kind: "block", type: "arm_action" },
                     { kind: "block", type: "get_joint_angle" },
                     { kind: "block", type: "get_all_joint_angles" },
-                    { kind: "block", type: "joints_angle_frame_raw", fields: {
-                        VARIABLE: "0, 0, 0, 0, 0, 0, 0, 0, 30, 30, 30, 30, 30, 30, 30, 30",
-                    } },
                     { kind: "block", type: "set_joint_angle", inputs: {
                         VARIABLE: {
                             block: {
@@ -210,16 +207,6 @@ function createToolbox() {
                                             type: "math_number",
                                         },
                                     },
-                                },
-                            },
-                        },
-                    } },
-                    { kind: "block", type: "set_joints_angle_sim_raw", inputs: {
-                        VARIABLE: {
-                            block: {
-                                type: "joints_angle_frame_raw",
-                                fields: {
-                                    VARIABLE: "0, 0, 0, 0, 0, 0, 0, 0, 30, 30, 30, 30, 30, 30, 30, 30",
                                 },
                             },
                         },
@@ -257,7 +244,19 @@ function createToolbox() {
                             },
                         } 
                     },
-                    { kind: "block", type: "arm_action" },
+                    { kind: "block", type: "set_joints_angle_sim_raw", inputs: {
+                        VARIABLE: {
+                            block: {
+                                type: "joints_angle_frame_raw",
+                                fields: {
+                                    VARIABLE: "0, 0, 0, 0, 0, 0, 0, 0, 30, 30, 30, 30, 30, 30, 30, 30",
+                                },
+                            },
+                        },
+                    } },
+                    { kind: "block", type: "joints_angle_frame_raw", fields: {
+                        VARIABLE: "0, 0, 0, 0, 0, 0, 0, 0, 30, 30, 30, 30, 30, 30, 30, 30",
+                    } },
                     { kind: "block", type: "action_skill_file" },
                 ],
             },
@@ -290,17 +289,19 @@ function blocklyGlobalConfig() {
     };
 
     const digitalInputOptions = [
-        ["NyBoard D6", "34"],
+        ["Rx2(9)", "9"],
+        ["Tx2(10)", "10"],
+        ["34", "34"],
         ["35", "35"],
         ["36", "36"],
         ["39", "39"],
         ["BackTouch(38)", "38"],
-        ["Rx2(9)", "9"],
-        ["Tx2(10)", "10"],
     ];
 
     const analogInputOptions = [
-        ["NyBoard A2", "34"],
+        ["Rx2(9)", "9"],
+        ["Tx2(10)", "10"],
+        ["34", "34"],
         ["35", "35"],
         ["36", "36"],
         ["39", "39"],
