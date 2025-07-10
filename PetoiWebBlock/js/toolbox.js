@@ -289,23 +289,23 @@ function blocklyGlobalConfig() {
     };
 
     const digitalInputOptions = [
-        ["Rx2(9)", "9"],
-        ["Tx2(10)", "10"],
         ["34", "34"],
         ["35", "35"],
         ["36", "36"],
         ["39", "39"],
         ["BackTouch(38)", "38"],
+        ["Rx2(9)", "9"],
+        ["Tx2(10)", "10"],
     ];
 
     const analogInputOptions = [
-        ["Rx2(9)", "9"],
-        ["Tx2(10)", "10"],
         ["34", "34"],
         ["35", "35"],
         ["36", "36"],
         ["39", "39"],
         ["BackTouch(38)", "38"],
+        ["Rx2(9)", "9"],
+        ["Tx2(10)", "10"],
     ];
 
     const jointOptions = [
@@ -340,26 +340,6 @@ function blocklyGlobalConfig() {
                 colour: "#E63946", // 通信积木：红色
                 tooltip: "",
                 helpUrl: "",
-            });
-        }
-    }
-
-    // 数字输入积木
-    Blockly.Blocks["get_digital_input"] = {
-        init: function () {
-            this.jsonInit({
-                type: "get_digital_input",
-                message0: getText("getDigitalInput"),
-                args0: [
-                    {
-                        type: "field_dropdown",
-                        name: "PIN",
-                        options: digitalInputOptions,
-                    },
-                ],
-                output: "Number",
-                colour: "#E63946", // 通信积木：红色
-                tooltip: "",
             });
         }
     }
@@ -402,17 +382,14 @@ function blocklyGlobalConfig() {
 
     // 超声波传感器距离(cm): Trigger [TRPIN] Echo [ECPIN]
     const trpinOptions = [
-        ["NyBoard D6", "6"],
-        ["NyBoard D7", "7"],
-        ["NyBoard D8", "8"],
-        ["NyBoard D9", "9"],
         ["BiBoard V0 Rx2", "16"],
         ["BiBoard V0 Tx2", "17"],
-        ["BiBoard V1 Rx2", "9."],
+        ["BiBoard V1 Rx2", "9"],
         ["BiBoard V1 Tx2", "10"]
     ]
     Blockly.Blocks["getUltrasonicDistance"] = {
         init: function () {
+            const ecpinOptions = [["Same as trigger", "-1"]].concat(trpinOptions);
             this.jsonInit({
                 type: "getUltrasonicDistance",
                 message0: getText("getUltrasonicDistance"),
@@ -421,17 +398,20 @@ function blocklyGlobalConfig() {
                         type: "field_dropdown",
                         name: "TRPIN",
                         options: trpinOptions,
+
                     },
                     {
                         type: "field_dropdown",
                         name: "ECPIN",
-                        options: trpinOptions,
+                        options: ecpinOptions,
                     },
                 ],
                 output: "Number",
                 colour: "#E63946", // 通信积木：红色
                 tooltip: "",
             });
+            this.setFieldValue(trpinOptions[2][1], "TRPIN");
+            this.setFieldValue(ecpinOptions[0][1], "ECPIN"); // 默认选择第一个选项
         },
     };
 
@@ -494,6 +474,26 @@ function blocklyGlobalConfig() {
         }
     }
 
+    // 数字输入积木
+    Blockly.Blocks["get_digital_input"] = {
+        init: function () {
+            this.jsonInit({
+                type: "get_digital_input",
+                message0: getText("getDigitalInput"),
+                args0: [
+                    {
+                        type: "field_dropdown",
+                        name: "PIN",
+                        options: digitalInputOptions,
+                    },
+                ],
+                output: "Number",
+                colour: "#E63946", // 通信积木：红色
+                tooltip: "",
+            });
+        }
+    }
+
     // 数字输出积木
     Blockly.Blocks["set_digital_output"] = {
         init: function () {
@@ -504,14 +504,7 @@ function blocklyGlobalConfig() {
                     {
                         type: "field_dropdown",
                         name: "PIN",
-                        options: [
-                            ["NyBoard D6", "25"],
-                            ["26", "26"],
-                            ["27", "27"],
-                            ["14", "14"],
-                            ["12", "12"],
-                            ["13", "13"],
-                        ],
+                        options: digitalInputOptions,
                     },
                     {
                         type: "field_dropdown",
@@ -540,10 +533,7 @@ function blocklyGlobalConfig() {
                     {
                         type: "field_dropdown",
                         name: "PIN",
-                        options: [
-                            ["NyBoard D6", "25"],
-                            ["26", "26"],
-                        ],
+                        options: analogInputOptions,
                     },
                     {
                         type: "field_number",

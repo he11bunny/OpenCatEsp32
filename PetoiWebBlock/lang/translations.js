@@ -453,7 +453,7 @@ const TRANSLATIONS = {
     "getSensorInput": "Get Sensor %1",
     "setDigitalOutput": "Set Digital Output Pin %1 State %2",
     "setAnalogOutput": "Set Analog Output Pin %1 Value %2",
-    "sendCustomCommand": "Send Custom Command %1 then delay %2 sec",
+    "sendCustomCommand": "Send Serial Command %1 then delay %2 sec",
     "trackUltrasonicDistance": "Variable %1 get ultrasonic sensor distance(cm): Trigger %2 Echo %3",
     "getUltrasonicDistance": "Get ultrasonic sensor distance(cm): Trigger %1 Echo %2",
     "trackCameraCoordinate": "Variable %1 camera detected target coordinates(x, y, width, height)",

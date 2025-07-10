@@ -404,7 +404,8 @@ javascript.javascriptGenerator.forBlock["getUltrasonicDistance"] = function (
     block
 ) {
     const trPin = block.getFieldValue("TRPIN");
-    const ecPin = block.getFieldValue("ECPIN");
+    const ecPinValue = block.getFieldValue("ECPIN");
+    const ecPin = ecPinValue === "-1" ? trPin : ecPinValue;
     const command = encodeCommand("XU", [trPin, ecPin]);
     //rawResult is string like ""0\nX\n"
     let code = `await (async function() {

@@ -1308,14 +1308,15 @@ ${code}
 
     let ipCheckTimer = null;
     let lastPartialIP = null;
+    let serialBufferText = '';
     let serialBuffer = '';
-    let consoleBuffer = ''; // 添加单独的console缓冲区
 
     async function openSerialPort() {
       try {
-        port = await navigator.serial.requestPort();
+        const selectPort = await navigator.serial.requestPort();
         try {
-          await port.open({ baudRate: 115200 });
+          await selectPort.open({ baudRate: 115200 });
+          port = selectPort; // 更新port为选择的端口
         } catch (portError) {
           // 检查是否是因为串口被占用
           if (portError.name === 'NetworkError' ||
@@ -1441,13 +1442,11 @@ ${code}
       // 检查串口是否已连接
       if (!port) {
         // 如果串口未连接，先尝试连接串口
-        try {
-          await openSerialPort();
-        } catch (error) {
-          console.error(getText("serialConnectionError"), error);
-          alert(getText("serialPortBusy"));
-          return;
-        }
+        await openSerialPort();
+      }
+
+      if (!writer) {
+        return;
       }
 
       // 创建遮罩层
@@ -1526,64 +1525,51 @@ ${code}
             break;
           }
           const text = new TextDecoder().decode(value);
-          serialBuffer += text;
-          consoleBuffer += text; // 同时添加到console缓冲区
+          if (!text) continue; // 如果没有数据，跳过
+          serialBufferText += text;
+          const lastLineIndex = serialBufferText.lastIndexOf('\r\n');
+          const linesText = serialBufferText.substring(0, lastLineIndex) + '\r\n';
+          const lines = linesText.split('\r\n');
+          serialBufferText = serialBufferText.substring(lastLineIndex + 2); // 保留剩余部分
+          serialBuffer += text; // 添加到serialBuffer
 
-          // 监听特定格式的输出：类似 "=\n4894\nR\n" 的格式
-          // 检查是否包含 "=\n" 开头和 "\nR\n" 结尾的模式
-          const patternMatch = consoleBuffer.match(/=\n([^\n]+)\n[a-zA-Z]{1}\n/);
+          // 监听特定格式的输出：类似 "=\r\n4894\r\nR\r\n" 的格式
+          // 检查是否包含 "=\r\n" 开头和 "\r\nR\r\n" 结尾的模式
+          const patternMatch = linesText.match(/=\r\n([^\r\n]+)\r\n[a-zA-Z]{1}\r\n/);
           if (patternMatch) {
             // 提取第二行内容（第一行是"="，第二行是数字，第三行是"R"）
             const secondLine = patternMatch[1];
             addConsoleMessage(secondLine);
-            
-            // 从console缓冲区中移除已处理的内容
-            const matchEnd = consoleBuffer.indexOf(patternMatch[0]) + patternMatch[0].length;
-            consoleBuffer = consoleBuffer.substring(matchEnd);
           }
 
           // 如果console缓冲区过大，防止内存泄漏
-          if (consoleBuffer.length > 10000) {
-            consoleBuffer = consoleBuffer.substring(consoleBuffer.length - 5000);
+          if (serialBuffer.length > 10000) {
+            serialBuffer = serialBuffer.substring(serialBuffer.length - 5000);
           }
 
-          // 取消任何正在进行的IP检查定时器
-          if (ipCheckTimer) {
-            clearTimeout(ipCheckTimer);
-            ipCheckTimer = null;
-          }
-
+          for (let line of lines.reverse()) {
           // 检查是否找到"IP Address:"字符串
-          const ipAddressPosition = serialBuffer.indexOf("IP Address:");
-          if (ipAddressPosition !== -1) {
-            // 找到IP地址前缀，提取后续内容检查
-            const afterPrefix = serialBuffer.substring(ipAddressPosition + "IP Address:".length).trim();
-
-            // 使用更宽松的正则表达式先找出可能的IP地址
-            const possibleIPMatch = afterPrefix.match(/^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/);
-
+            const ipAddressPosition = line.indexOf("IP Address:");
+            const afterPrefix = line.substring(ipAddressPosition).trim();
+            const possibleIPMatch = afterPrefix.match(/^IP Address:\s*(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/);
             if (possibleIPMatch) {
-              const possibleIP = possibleIPMatch[1];
-
-              // 检查该IP地址后是否紧跟着还有数字，如果有可能是不完整的
-              const afterIP = afterPrefix.substring(possibleIP.length);
-              const hasMoreDigits = /^\d/.test(afterIP);
-
-              if (hasMoreDigits) {
-                // 后面还有数字，可能是不完整的IP，暂时不处理，等待更多数据
-                console.log(getText("incompleteIPDetected").replace("{ip}", possibleIP));
-                lastPartialIP = possibleIP;
-              } else {
-                // 延迟处理IP地址，等待可能的后续数据片段
-                lastPartialIP = possibleIP;
-
-                // 设置延迟处理定时器 (100ms)
-                ipCheckTimer = setTimeout(() => {
-                  processDetectedIP(lastPartialIP);
-                  ipCheckTimer = null;
-                  lastPartialIP = null;
-                }, 100);
+              // 取消任何正在进行的IP检查定时器
+              if (ipCheckTimer) {
+                clearTimeout(ipCheckTimer);
+                ipCheckTimer = null;
               }
+
+              const possibleIP = possibleIPMatch[1];
+              // 延迟处理IP地址，等待可能的后续数据片段
+              lastPartialIP = possibleIP;
+
+              // 设置延迟处理定时器 (100ms)
+              ipCheckTimer = setTimeout(() => {
+                processDetectedIP(lastPartialIP);
+                ipCheckTimer = null;
+                lastPartialIP = null;
+              }, 100);
+              break; // 找到IP地址后跳出循环
             }
           }
 
@@ -1592,7 +1578,7 @@ ${code}
           // 修复：优化换行符处理，避免产生过多空行
           // 1. 将连续的换行符替换为单个换行
           // 2. 只在文本末尾不是换行符时添加换行
-          const processedText = text.replace(/\n{2,}/g, '\n');
+          const processedText = serialBuffer.replace(/\n{2,}/g, '\n');
 
           // 只拼接内容，不使用innerHTML直接累加，避免渲染问题
           const textNode = document.createTextNode(processedText);
@@ -1655,20 +1641,8 @@ ${code}
             makeConnectionBlocks[0].setFieldValue(ip, 'IP_ADDRESS');
           }
         }
-
-        // 从缓冲区中清除已处理的IP地址部分
-        const ipPosition = serialBuffer.indexOf('IP Address: ' + ip);
-        if (ipPosition !== -1) {
-          serialBuffer = serialBuffer.substring(0, ipPosition) +
-            serialBuffer.substring(ipPosition + ('IP Address: ' + ip).length);
-        }
       } else {
         console.log(getText("invalidIPFormat").replace("{ip}", ip));
-      }
-
-      // 如果缓冲区过大，防止内存泄漏
-      if (serialBuffer.length > 10000) {
-        serialBuffer = serialBuffer.substring(serialBuffer.length - 5000);
       }
     }
 
