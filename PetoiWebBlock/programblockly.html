@@ -1167,6 +1167,15 @@ ${code}
           // 更新文件名和标签显示
           updateUIText();
 
+          if(currentDeviceIP !== "192.168.4.1") {
+            // 查找工作区中的make_connection积木块并更新IP地址
+            const makeConnectionBlocks = workspace.getBlocksByType('make_connection');
+            if (makeConnectionBlocks && makeConnectionBlocks.length > 0) {
+              // 更新第一个make_connection积木块的IP_ADDRESS字段
+              makeConnectionBlocks[0].setFieldValue(currentDeviceIP, 'IP_ADDRESS');
+            }
+          }
+
           // 不使用alert，而是在控制台显示加载成功信息
           const successMsg = getText('fileLoaded').replace('{filename}', file.name);
           addConsoleMessage([successMsg]);
