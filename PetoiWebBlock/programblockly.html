@@ -1578,7 +1578,7 @@ ${code}
           // 修复：优化换行符处理，避免产生过多空行
           // 1. 将连续的换行符替换为单个换行
           // 2. 只在文本末尾不是换行符时添加换行
-          const processedText = serialBuffer.replace(/\n{2,}/g, '\n');
+          const processedText = text.replace(/\n{2,}/g, '\n');
 
           // 只拼接内容，不使用innerHTML直接累加，避免渲染问题
           const textNode = document.createTextNode(processedText);
